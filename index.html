@@ -7,7 +7,12 @@
 <meta name="description" content="砂上電力が、UTAU、MYCOE（ボイロのようなもの）またはその関連物を配布するためのサイトです。">
 <meta property="og:title" content="砂上天獄">
 <meta property="og:site_name" content="砂上天獄">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sazyoudnrk.github.io/sazyouutau/">
+<meta property="og:description" content="砂上電力が、UTAU、MYCOE（ボイロのようなもの）またはその関連物を配布するためのサイトです。">
+<meta property="og:image" content="https://static.wixstatic.com/media/87b28a_aed14a8bbfa34bf49c4f880f2f25e836~mv2.png">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="https://static.wixstatic.com/media/87b28a_a80b512c13f242d6826fdee97af0a04d~mv2.png/v1/crop/x_776,y_50,w_1025,h_1025/fill/w_64,h_64,al_c,q_90/i.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap">
@@ -30,6 +35,7 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-weight:300;
   font-size:16px;line-height:1.75;letter-spacing:.04em;-webkit-text-size-adjust:100%}
@@ -205,14 +211,16 @@ footer{background:var(--btn);color:var(--ink);text-align:center;font-size:13px;p
    データ（ここを書き換えればページが更新される）
    ====================================================== */
 
-// 画像：今はWixのURLを直接参照。リポジトリに置いたら "img/xxx.png" に差し替え
+// 画像：src（リポジトリ内）を先に読み、無ければ fb（Wix）を表示する
+// → img/ に同じ名前でアップロードすればコードを触らずに切り替わる
 const W = id => `https://static.wixstatic.com/media/87b28a_${id}`;
 const IMG = {
-  tototo:     W('aed14a8bbfa34bf49c4f880f2f25e836~mv2.png'),
-  tototoIcon: W('a80b512c13f242d6826fdee97af0a04d~mv2.png'),
-  toto:       W('b6fc053afc934557b59df26a6b2fa83b~mv2.png'),
-  totoIcon:   W('72c7fcff13bf4a6c8e2e188ca1d6ca0d~mv2.png'),
+  tototo:     {src:'img/tototo.png',      fb:W('aed14a8bbfa34bf49c4f880f2f25e836~mv2.png')},
+  tototoIcon: {src:'img/tototo_icon.png', fb:W('a80b512c13f242d6826fdee97af0a04d~mv2.png/v1/crop/x_776,y_50,w_1025,h_1025/fill/w_640,h_752,al_c,q_90/i.png')},
+  toto:       {src:'img/toto.png',        fb:W('b6fc053afc934557b59df26a6b2fa83b~mv2.png')},
+  totoIcon:   {src:'img/toto_icon.png',   fb:W('72c7fcff13bf4a6c8e2e188ca1d6ca0d~mv2.png/v1/crop/x_622,y_55,w_1108,h_1108/fill/w_640,h_752,al_c,q_90/i.png')},
 };
+const pic = o => `src="${o.src}" data-fb="${o.fb}"`;
 
 // 試聴音声：audio/ に置いたファイル（無ければ「試聴音声は準備中です」と出る）
 const AUDIO = {
@@ -253,6 +261,8 @@ const WORKS = [
 const FAN_COVERS = [];
 
 // 絵：新しく追加した絵は配列の先頭に入れる（上に表示される）
+// 新しい絵は 'img/gallery/ファイル名' をそのまま先頭に書けばOK
+// 既存分は img/gallery/g01.png〜g21.png（下の並び順）として置けば自動で切り替わる
 const GALLERY = [
   'aed14a8bbfa34bf49c4f880f2f25e836~mv2.png','b6fc053afc934557b59df26a6b2fa83b~mv2.png',
   'c8f801a9208e46ebacda2ddd251a0a47~mv2.png','b86353a16b234a5eae686463fd8bd5d7~mv2.png',
@@ -265,7 +275,7 @@ const GALLERY = [
   '7beede17ad464fbcb8e213dc7dd06b22~mv2.jpg','7405516d20514247b7b019b68ff806e0~mv2.jpg',
   'e1d93c7b00614f3c82c0d0fa6e0cfd9b~mv2.jpg','f9a7c2c79717414f90b9a52bbad0b6d1~mv2.jpg',
   '2c21fac508a04b0ca38cdd1235f090f5~mv2.png',
-].map(W);
+].map((id,i)=>({src:`img/gallery/g${String(i+1).padStart(2,'0')}.${id.split('.').pop()}`, fb:W(id)}));
 
 /* ======================================================
    部品
@@ -280,7 +290,7 @@ const back = to => `<a class="btn back" href="#${to}">戻る</a>`;
 const vcard = (to, img, name, desc, audio) => `
   <hr>
   <div class="vcard">
-    <a class="pic" href="#${to}"><img src="${img}" alt="${name}"></a>
+    <a class="pic" href="#${to}"><img ${pic(img)} alt="${name}"></a>
     <div class="txt"><h2><a href="#${to}">${name}</a></h2><p>${desc}</p></div>
     ${listen(audio)}
   </div>`;
@@ -309,7 +319,7 @@ function loadX(){
    ====================================================== */
 const PAGES = {
 home:{title:'ホーム', full:true, html:()=>`
-  <div class="hero wrap"><img src="${IMG.tototo}" alt="注寝ととと"></div>
+  <div class="hero wrap"><img ${pic(IMG.tototo)} alt="注寝ととと"></div>
   <section class="band"><div class="wrap">
     <p>砂上電力が、UTAU、MYCOE（ボイロのようなもの）またはその関連物を配布するためのサイトです。<br>初めてご利用の方は、<a href="#terms">利用規約</a>をご覧ください。</p>
     <p>メインサイトはこちら<br>
@@ -391,7 +401,7 @@ terms:{title:'利用規約', html:()=>`
 tototo:{title:'注寝ととと', html:()=>`
   <h1 class="ttl">注寝ととと</h1>
   <div class="char">
-    <img src="${IMG.tototo}" alt="注寝ととと 立ち絵">
+    <img ${pic(IMG.tototo)} alt="注寝ととと 立ち絵">
     <div>
       <div class="box"><h3>使い方</h3>
         <p>utau.exeのファイルのある階層のvoiceに<br>解凍した注寝とととを置いてください</p>
@@ -447,7 +457,7 @@ ust:{title:'UST', html:()=>`
 toto:{title:'注与とと', html:()=>`
   <h1 class="ttl">注与とと</h1>
   <div class="char">
-    <img src="${IMG.toto}" alt="注与とと 立ち絵">
+    <img ${pic(IMG.toto)} alt="注与とと 立ち絵">
     <div>
       <div class="box"><h3>使い方</h3>
         <p>${ext('https://coeiroink.com/','https://coeiroink.com/','u blue')}<br>↑ここからcoeiroinkをDL後</p>
@@ -478,7 +488,7 @@ works:{title:'作品', html:()=>`
 
 gallery:{title:'絵', html:()=>`
   <p class="cap">絵を置いている</p>
-  <div class="gallery">${GALLERY.map((src,i)=>`<button data-src="${src}" aria-label="絵 ${i+1} を拡大"><img src="${src}" alt="" loading="lazy"></button>`).join('')}</div>`},
+  <div class="gallery">${GALLERY.map((g,i)=>{const o=typeof g==='string'?{src:g,fb:''}:g;return `<button aria-label="絵 ${i+1} を拡大"><img ${pic(o)} alt="" loading="lazy"></button>`}).join('')}</div>`},
 };
 
 /* ======================================================
@@ -506,9 +516,15 @@ function render(){
 }
 window.addEventListener('hashchange',render);
 
+// 画像フォールバック：リポジトリに無ければWixの画像へ
+document.addEventListener('error',e=>{
+  const t=e.target; if(t.tagName!=='IMG'||!t.dataset.fb) return;
+  const fb=t.dataset.fb; t.removeAttribute('data-fb'); t.src=fb;
+},true);
+
 const lb=document.getElementById('lb'), lbImg=document.getElementById('lbImg');
 const closeLb=()=>{lb.hidden=true;lbImg.src=''};
-main.addEventListener('click',e=>{const b=e.target.closest('.gallery button');if(!b)return;lbImg.src=b.dataset.src;lb.hidden=false});
+main.addEventListener('click',e=>{const b=e.target.closest('.gallery button');if(!b)return;lbImg.src=b.querySelector('img').currentSrc;lb.hidden=false});
 lb.addEventListener('click',e=>{if(e.target!==lbImg)closeLb()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLb();closeNav()}});
 
