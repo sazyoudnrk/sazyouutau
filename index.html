@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>砂上天獄</title>
+<meta name="description" content="砂上電力が、UTAU、MYCOE（ボイロのようなもの）またはその関連物を配布するためのサイトです。">
+<meta property="og:title" content="砂上天獄">
+<meta property="og:site_name" content="砂上天獄">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap">
+<style>
+/* 元Wixの再現: 薄グレー地・黄色ロゴ・白い四角のハンバーガー・灰色の四角ボタン・細字グレー本文 */
+:root{
+  --bg:#e8e6e7;        /* 地 */
+  --title:#f4b232;     /* ロゴ */
+  --band:#f7cd62;      /* ホームの黄色帯 */
+  --text:#757575;      /* 本文（細字グレー） */
+  --ink:#1f1f1f;       /* 見出し・更新履歴 */
+  --red:#e8463c;       /* 砂上・電力 */
+  --btn:#c6c6c6;       /* 四角ボタン */
+  --btn-hover:#b3b3b3;
+  --teal:#3e8796;      /* 「画像をクリックで詳細へ」 */
+  --rule:#5e5e5e;
+  --white:#ffffff;
+  --font:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  --w:880px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-weight:300;
+  font-size:16px;line-height:1.75;letter-spacing:.04em;-webkit-text-size-adjust:100%}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0;font-weight:300;line-height:1.35}
+p{margin:0}
+.wrap{max-width:var(--w);margin:0 auto;
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+
+/* ===== ヘッダー ===== */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.logo{color:var(--title);font-weight:700;font-size:clamp(34px,8vw,44px);letter-spacing:.02em;text-decoration:none;line-height:1}
+.burger{width:64px;height:64px;background:var(--white);border:0;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:9px;padding:0;flex:none}
+.burger span{display:block;width:30px;height:2px;background:var(--ink)}
+/* PC: 横並びメニュー */
+.menu{list-style:none;margin:0;padding:0;display:flex;gap:2px}
+.menu>li{position:relative}
+.menu a{display:block;padding:8px 16px;text-decoration:none;color:var(--ink);font-weight:400;font-size:15px;white-space:nowrap}
+.menu a:hover,.menu a.on{color:var(--title)}
+.menu .sub{list-style:none;margin:0;padding:6px 0;position:absolute;left:0;top:100%;min-width:160px;background:var(--white);display:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.menu>li:hover>.sub,.menu>li:focus-within>.sub{display:block}
+.burger{display:none}
+@media (max-width:860px){
+  .burger{display:flex}
+  #nav{position:fixed;inset:0;z-index:40;background:var(--white);display:none;overflow-y:auto;
+    padding:calc(90px + env(safe-area-inset-top,0px)) max(28px,env(safe-area-inset-right,0px)) 40px max(28px,env(safe-area-inset-left,0px))}
+  #nav.open{display:block}
+  .menu{flex-direction:column;gap:0}
+  .menu a{font-size:20px;padding:10px 0}
+  .menu .sub{position:static;display:block;box-shadow:none;background:none;padding:0 0 6px 20px}
+  .menu .sub a{font-size:17px;color:var(--text)}
+  .close{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));right:max(20px,env(safe-area-inset-right,0px));
+    width:56px;height:56px;border:0;background:none;font-size:38px;line-height:1;color:var(--ink);cursor:pointer;font-weight:300}
+}
+@media (min-width:861px){.close{display:none}}
+
+/* ===== 共通 ===== */
+main{padding-bottom:80px}
+.page{display:flex;flex-direction:column;gap:26px;padding-top:28px}
+.ttl{font-size:clamp(36px,8vw,48px);color:var(--text);border-bottom:2px solid var(--rule);padding-bottom:4px;letter-spacing:.01em}
+.btns{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;max-width:520px}
+.btn{display:flex;align-items:center;justify-content:center;min-height:56px;padding:8px 16px;background:var(--btn);
+  color:var(--ink);text-decoration:none;font-weight:400;font-size:18px;text-align:center;transition:background .15s}
+.btn:hover{background:var(--btn-hover)}
+.u{text-decoration:underline;text-underline-offset:4px}
+.u.blue{color:var(--teal)}
+.hint{color:var(--teal);font-size:18px}
+hr{border:0;border-top:2px solid var(--rule);margin:0}
+.stack{display:flex;flex-direction:column;gap:2px}
+
+/* ===== ホーム ===== */
+.hero{display:flex;justify-content:center;padding-top:24px}
+.hero img{width:min(480px,100%)}
+.band{background:var(--band);text-align:center;padding-block:44px}
+.band .wrap{display:flex;flex-direction:column;gap:36px;font-size:clamp(16px,4.2vw,19px)}
+.mainlink{font-weight:700;color:var(--ink);text-decoration:none;font-size:clamp(17px,4.4vw,20px)}
+.mainlink .r{color:var(--red)}
+.mainlink:hover{text-decoration:underline}
+.log{padding-block:40px 0;color:var(--ink);font-weight:400}
+.log h2{font-size:28px;font-weight:400;margin-bottom:6px}
+.log ul{list-style:none;margin:0;padding:0;font-size:clamp(16px,4.4vw,19px)}
+.log time{font-variant-numeric:tabular-nums;margin-right:.6em}
+
+/* ===== 音源カード（UTAU / MYCOE） ===== */
+.vcard{display:grid;grid-template-columns:minmax(0,320px) 1fr;gap:20px 28px}
+.vcard .pic{display:block;aspect-ratio:320/376;max-width:100%;overflow:hidden;background:var(--band)}
+.vcard .pic img{width:100%;height:100%;object-fit:cover}
+.vcard .txt{min-width:0;display:flex;flex-direction:column;gap:22px;padding-top:6px}
+.vcard h2{font-size:clamp(26px,6vw,34px);text-align:center}
+.vcard h2 a{text-decoration:none}
+.vcard h2 a:hover{color:var(--ink)}
+.vcard .listen{grid-column:1/-1}
+@media (max-width:520px){.vcard{grid-template-columns:1fr 1fr;gap:18px 16px}.vcard .txt{gap:16px}.vcard .txt p{font-size:15px}}
+
+/* 試聴 */
+.listen{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,2fr);align-items:center;gap:16px}
+.listen>span{font-size:22px}
+.players{display:flex;flex-direction:column;gap:10px;min-width:0}
+.player{background:var(--white);display:flex;align-items:center;min-height:60px;padding:6px 10px;max-width:380px}
+.player audio{width:100%;height:44px}
+.na{font-size:14px}
+
+/* ===== キャラ詳細 ===== */
+.char{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:28px;align-items:start}
+.char>img{justify-self:center;max-height:540px;width:auto}
+.char>div{min-width:0;display:flex;flex-direction:column;gap:24px}
+@media (max-width:640px){.char{grid-template-columns:1fr}.char>img{max-height:440px}}
+.box h3{font-size:22px;color:var(--ink);font-weight:400;margin-bottom:4px}
+.prof{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 1em}
+.prof dt::after{content:"："}
+.prof dd{margin:0}
+.prof .gap{grid-column:1/-1;height:.8em}
+.dl{display:flex;flex-direction:column;gap:28px}
+.dl-item{display:flex;flex-direction:column;gap:10px}
+.dl-item .btn{max-width:360px}
+.back{max-width:200px}
+
+/* ===== 規約 ===== */
+.terms{display:flex;flex-direction:column;gap:22px}
+.terms h2{font-size:22px;color:var(--ink);font-weight:400}
+.terms h3{font-size:18px;color:var(--ink);font-weight:400}
+.terms section{display:flex;flex-direction:column;gap:4px}
+.terms ul{margin:0;padding:0;list-style:none}
+.terms li::before{content:"・"}
+.terms li{padding-left:1em;text-indent:-1em}
+
+/* ===== 作品 ===== */
+.works{display:flex;flex-direction:column;gap:14px}
+.work{display:flex;flex-direction:column;gap:14px;margin-bottom:22px}
+.embed{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}
+.embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.embed.sc{aspect-ratio:auto;height:300px;background:none}
+.placeholder{display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;background:var(--btn);color:var(--ink);font-size:15px}
+.xpost{max-width:550px;width:100%;margin:0 auto}
+.xpost .twitter-tweet{margin:0 auto!important}
+.cap{font-size:clamp(16px,4.4vw,19px)}
+
+/* ===== 絵 ===== */
+.gallery{columns:3 200px;column-gap:12px}
+.gallery button{all:unset;cursor:zoom-in;display:block;margin:0 0 12px;break-inside:avoid}
+.gallery button:focus-visible{outline:2px solid var(--teal)}
+.gallery img{width:100%}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(20,20,20,.9);display:flex;align-items:center;justify-content:center;padding:24px}
+.lb img{max-height:90vh;max-width:100%;width:auto}
+.lb button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));
+  background:none;border:0;color:#fff;font-size:34px;cursor:pointer;line-height:1}
+
+footer{background:var(--btn);color:var(--ink);text-align:center;font-size:13px;padding-block:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <a class="logo" href="#home">砂上天獄</a>
+    <button class="burger" id="burger" aria-label="メニューを開く" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav id="nav">
+      <button class="close" id="close" aria-label="メニューを閉じる">×</button>
+      <ul class="menu">
+        <li><a href="#home">ホーム</a></li>
+        <li><a href="#utau">UTAU</a>
+          <ul class="sub">
+            <li><a href="#terms">利用規約</a></li>
+            <li><a href="#tototo">注寝ととと</a></li>
+            <li><a href="#ust">UST</a></li>
+          </ul>
+        </li>
+        <li><a href="#mycoe">MYCOE</a>
+          <ul class="sub"><li><a href="#toto">注与とと</a></li></ul>
+        </li>
+        <li><a href="#works">作品</a></li>
+        <li><a href="#gallery">絵</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<footer><div class="wrap">© 砂上電力</div></footer>
+
+<div class="lb" id="lb" hidden><button id="lbClose" aria-label="閉じる">×</button><img id="lbImg" alt=""></div>
+
+<script>
+/* ======================================================
+   データ（ここを書き換えればページが更新される）
+   ====================================================== */
+
+// 画像：今はWixのURLを直接参照。リポジトリに置いたら "img/xxx.png" に差し替え
+const W = id => `https://static.wixstatic.com/media/87b28a_${id}`;
+const IMG = {
+  tototo:     W('aed14a8bbfa34bf49c4f880f2f25e836~mv2.png'),
+  tototoIcon: W('a80b512c13f242d6826fdee97af0a04d~mv2.png'),
+  toto:       W('b6fc053afc934557b59df26a6b2fa83b~mv2.png'),
+  totoIcon:   W('72c7fcff13bf4a6c8e2e188ca1d6ca0d~mv2.png'),
+};
+
+// 試聴音声：audio/ に置いたファイル（無ければ「試聴音声は準備中です」と出る）
+const AUDIO = {
+  tototo_v111:'audio/tototo_v111.mp3',
+  tototo_v110:'audio/tototo_v110.mp3',
+  tototo_v100:'audio/tototo_v100.mp3',
+  toto_1:'audio/toto_1.mp3',
+  toto_2:'audio/toto_2.mp3',
+  toto_3:'audio/toto_3.mp3',
+};
+
+// 更新履歴：新しいものを上に追加
+const HISTORY = [
+  ['26/7/15','サイトの更新　絵を追加しました'],
+  ['24/4/11','注寝とととver1.11を公開しました。原音設定が少し改善されています（たぶん）'],
+  ['22/11/09','注与ととver1.10を公開しました。'],
+  ['22/11/08','注寝とととver1.00を公開しました。'],
+  ['22/10/31','音源をとりなおしたのでちかいうちに最新版を出します。'],
+  ['21/03/21','注寝ととと配布開始'],
+  ['21/03/19','サイト開設'],
+  ['21/03/10','ととと誕生'],
+];
+
+// 作品：上から古い順（元サイトどおり「下に行くほど新しい」）。新しいものは末尾に追加
+// url に YouTube / X / SoundCloud のURLを入れると自動で埋め込みになる。空なら仮枠
+const WORKS = [
+  {title:'【UTAUカバー】夜に駆ける', url:'', cap:'歌うかどうかテストしたときの動画'},
+  {title:'君の席/注寝ととと-UTAU',  url:'', cap:'音源公開動画'},
+  {title:'big brother/注寝ととと',  url:'', cap:'耳コピがんばりました　カバーです。'},
+  {title:'きゅうくらりん（X）',      url:'', cap:'きゅうくらりんを歌わせました'},
+  {title:'【UTAU Cover】Daisy Bell', url:'', cap:'とととは英語を歌える'},
+  {title:'Still Alive(Portal)（X）', url:'', cap:'まだ生きている'},
+  {title:'【UTAU Cover】イガク',     url:'', cap:'イガク　カバーです。　ユ！'},
+  {title:'【UTAU Cover】±0',         url:'', cap:'動画がかわいいです'},
+  {title:'Lab=01 //utau cover（SoundCloud）', url:'', cap:''},
+];
+// 作っていただいたカバー：{title, url}
+const FAN_COVERS = [];
+
+// 絵：新しく追加した絵は配列の先頭に入れる（上に表示される）
+const GALLERY = [
+  'aed14a8bbfa34bf49c4f880f2f25e836~mv2.png','b6fc053afc934557b59df26a6b2fa83b~mv2.png',
+  'c8f801a9208e46ebacda2ddd251a0a47~mv2.png','b86353a16b234a5eae686463fd8bd5d7~mv2.png',
+  'c2fbc1a5059a41a2bc5fe361c0b9f949~mv2.png','72c7fcff13bf4a6c8e2e188ca1d6ca0d~mv2.png',
+  '1acc4fa4b80b4ca78bc64169d019e508~mv2.png','88f6fb01b2b04d29992117046b0ec333~mv2.png',
+  '360a9810db06473988668921f65b531c~mv2.png','f662e8824bff4901abf7791400dab39e~mv2.png',
+  'a724b1006cec43289b381ae866eaff20~mv2.png','ba693fc40dfd4a38b57bc9f9f1cf74f0~mv2.jpg',
+  '2ddeebe938c947469fc338f47475d933~mv2.jpg','bb938bb34d204c549d2119e9a854d1b0~mv2.jpg',
+  'd8085919680e4bda8248703bb16cbd70~mv2.jpg','d3f094dbb40643b8986bfe013fa8d856~mv2.jpg',
+  '7beede17ad464fbcb8e213dc7dd06b22~mv2.jpg','7405516d20514247b7b019b68ff806e0~mv2.jpg',
+  'e1d93c7b00614f3c82c0d0fa6e0cfd9b~mv2.jpg','f9a7c2c79717414f90b9a52bbad0b6d1~mv2.jpg',
+  '2c21fac508a04b0ca38cdd1235f090f5~mv2.png',
+].map(W);
+
+/* ======================================================
+   部品
+   ====================================================== */
+const ext = (href, text, cls='u') => `<a class="${cls}" href="${href}" target="_blank" rel="noopener">${text}</a>`;
+const listen = (keys, label='試聴') => `
+  <div class="listen"><span>${label}</span><div class="players">
+  ${[].concat(keys).map(k=>`<div class="player"><audio controls preload="metadata" src="${AUDIO[k]}" data-audio></audio></div>`).join('')}
+  </div></div>`;
+const prof = rows => `<dl class="prof">${rows.map(r=>r?`<dt>${r[0]}</dt><dd>${r[1]}</dd>`:'<div class="gap"></div>').join('')}</dl>`;
+const back = to => `<a class="btn back" href="#${to}">戻る</a>`;
+const vcard = (to, img, name, desc, audio) => `
+  <hr>
+  <div class="vcard">
+    <a class="pic" href="#${to}"><img src="${img}" alt="${name}"></a>
+    <div class="txt"><h2><a href="#${to}">${name}</a></h2><p>${desc}</p></div>
+    ${listen(audio)}
+  </div>`;
+
+function embed(w){
+  const u = w.url || '';
+  let m;
+  if ((m = u.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/)))
+    return `<div class="embed"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}" title="${w.title}" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  if (/^https:\/\/(twitter|x)\.com\//.test(u))
+    return `<div class="xpost"><blockquote class="twitter-tweet" data-media-max-width="560"><a href="${u.replace('x.com','twitter.com')}">${w.title}</a></blockquote></div>`;
+  if (/soundcloud\.com\//.test(u))
+    return `<div class="embed sc"><iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(u)}&color=%23ff5500&visual=false" title="${w.title}" loading="lazy" allow="autoplay"></iframe></div>`;
+  return `<div class="embed placeholder">${w.title}<br>（URL未設定）</div>`;
+}
+let xLoaded = false;
+function loadX(){
+  if (!document.querySelector('.twitter-tweet')) return;
+  if (window.twttr && twttr.widgets) { twttr.widgets.load(main); return; }
+  if (xLoaded) return; xLoaded = true;
+  const s = document.createElement('script'); s.src = 'https://platform.twitter.com/widgets.js'; s.async = true; document.body.appendChild(s);
+}
+
+/* ======================================================
+   ページ
+   ====================================================== */
+const PAGES = {
+home:{title:'ホーム', full:true, html:()=>`
+  <div class="hero wrap"><img src="${IMG.tototo}" alt="注寝ととと"></div>
+  <section class="band"><div class="wrap">
+    <p>砂上電力が、UTAU、MYCOE（ボイロのようなもの）またはその関連物を配布するためのサイトです。<br>初めてご利用の方は、<a href="#terms">利用規約</a>をご覧ください。</p>
+    <p>メインサイトはこちら<br>
+      <a class="mainlink" href="https://nanashie.wixsite.com/sazyou" target="_blank" rel="noopener">→<span class="r">砂上</span>拠点<span class="r">電力</span>発電所</a></p>
+  </div></section>
+  <section class="log wrap">
+    <h2>更新履歴</h2>
+    <ul>${HISTORY.map(([d,t])=>`<li><time>${d}</time>${t}</li>`).join('')}</ul>
+  </section>`},
+
+utau:{title:'UTAU', html:()=>`
+  <div class="btns"><a class="btn" href="#terms">利用規約</a><a class="btn" href="#ust">UST</a></div>
+  <h1 class="ttl">UTAU</h1>
+  <div class="stack">
+    <p><a class="u blue" href="#terms">ここ</a>を一読してください</p>
+    <p>UTAU音源の配布、プロフィールの記載されたページへのリンクがまとめられています。</p>
+    <p>試聴音源はきらきらぼしで${ext('https://bowlroll.net/file/63432','こちら')}のUSTを借りています。</p>
+  </div>
+  <p class="hint">画像をクリックで詳細へ</p>
+  ${vcard('tototo', IMG.tototoIcon, '注寝ととと', '最初で最後かもしれない音源です。', 'tototo_v111')}`},
+
+mycoe:{title:'MYCOE', html:()=>`
+  <div class="btns">${ext('https://coeiroink.com/terms','利用規約','btn')}</div>
+  <h1 class="ttl">MYCOE</h1>
+  <div class="stack">
+    <p>${ext('https://coeiroink.com/terms','ここ','u blue')}を一読してください</p>
+    <p>喋ります</p>
+  </div>
+  <p class="hint">画像をクリックで詳細へ</p>
+  ${vcard('toto', IMG.totoIcon, '注与とと', '喋る', 'toto_1')}`},
+
+terms:{title:'利用規約', html:()=>`
+  <h1 class="ttl">利用規約</h1>
+  <div class="terms">
+    <h3>堅苦しくなっちゃってごめんなさい。何かあれば気軽に質問してくださいね！</h3>
+    <section>
+      <p>本音源は、飴屋/菖蒲様によって配布されているフリー音声合成ソフトのUTAU向けに制作されました。<br>その他のソフト等での利用も可能ですが、その場合不具合等の保証はできません。</p>
+      <p>配布物に同梱の利用規約が存在する場合そちらをご覧ください。</p>
+      <p>複雑でよくわからない、書いていない部分について質問したい場合は、下記の文章に記述している連絡先へご連絡ください。</p>
+    </section>
+    <section><h2>■利用規約■</h2><ul>
+      <li>本音源、キャラクター、立ち絵の著作権は全て砂上電力にあります。</li>
+      <li>法律と公序良俗の範囲内であれば、オリジナル楽曲、既存曲のカバー、オリジナルキャラクターのキャラボイス等での利用が可能です。</li>
+      <li>配布物を利用する際、できればキャラクターの名前の記載をお願いします。(記載先は説明文など、作品内でなくても構いません。難しければ記載しなくても問題ありません。)</li>
+      <li>音源を使用した作品を公開する際には、各コミュニティでの規約をご確認ください</li>
+    </ul></section>
+    <section><h3>□禁止事項</h3><ul>
+      <li>政治的表現：全面禁止。</li>
+      <li>宗教的表現：布教・勧誘目的の使用は禁止。新興宗教関連は全面禁止。<br>神話等の古代宗教関連や世界宗教の経典原典関連や歌曲関連は可</li>
+      <li>特定の個人、または団体への誹謗中傷や公序良俗に反する用途への使用を禁止します。(風刺的な作品を作りたい方は自己責任でよろしくおねがいします。)</li>
+    </ul></section>
+    <section><h3>□再配布について</h3><ul>
+      <li>音源・同梱のイラストについては、なんらかの事情で公式配布場所からDLできない場合のみ、特定且つ少数に対する配布に限り、その音源としての配布を許可します。</li>
+      <li>原音設定ファイルや周波数表、ノイズを修正したものは、事後でも報告していただくことを条件に再配布を許可します。しかし音声にフィルタを通して改変したものは再配布を許可しません。(例えば、エコーやピッチ調整、声質を改変したもの）</li>
+      <li>音源の配布停止を宣言した場合、いかなる場合でも音源の再配布を禁止します。DLした音源は配布停止後も利用していただいて構いません。</li>
+    </ul></section>
+    <section><h3>□商用利用について</h3><ul>
+      <li>営利目的・商用・企業でのご利用は、本音源・キャラクターともに要相談です。</li>
+      <li>同人など個人の活動の範囲内ならば、金銭のやり取りの発生するものであっても二次創作の規約に則る限り自由です。その場合任意ですが、報告していただけたら嬉しいです。</li>
+    </ul></section>
+    <section><h3>□免責事項</h3><ul>
+      <li>ライブラリを使用して生じたいかなる損害に対して当方は一切の責任を負いません。ご容赦ください。</li>
+    </ul></section>
+    <section><h3>□二次創作について</h3><ul>
+      <li>していただけたらとても嬉しいです。報告していただければ見に行きます。</li>
+      <li>他人に迷惑をかけるような行為やキャラクターの価値を著しく下げるような行為は禁止です。</li>
+      <li>年齢制限がつきそうなものを投稿する際にはワンクッションを入れた上で検索避け等をお願いします。</li>
+      <li>服装や髪型の改変は許可しますが、改変したものを別個体として公開することは禁止します。(例えば、違う服装にしたキャラクターに新たな名前をつけて公開する等)</li>
+      <li>別のキャラクターとの接触がある場合、相手方の規約をご確認ください。</li>
+    </ul></section>
+    <section><h3>□連絡先</h3>
+      <p>twitter：${ext('https://twitter.com/sazyou_dnrk','@sazyou_dnrk')}<br>gmail：sazyoden@gmail.com</p>
+    </section>
+    <section><h2>■イラストについて■</h2><ul>
+      <li>同梱イラストは、本音源を使用した動画や本音源にかかわるサイト等であれば、好きに使っていただいて構いません。著作権は放棄していません。使用の際、このサイトのリンクを明記していただけるとありがたいです。難しければ不要です。</li>
+    </ul></section>
+  </div>`},
+
+tototo:{title:'注寝ととと', html:()=>`
+  <h1 class="ttl">注寝ととと</h1>
+  <div class="char">
+    <img src="${IMG.tototo}" alt="注寝ととと 立ち絵">
+    <div>
+      <div class="box"><h3>使い方</h3>
+        <p>utau.exeのファイルのある階層のvoiceに<br>解凍した注寝とととを置いてください</p>
+        <p>とととは連続音のみなので単独音では歌いません。<br>（単独音の歌詞を連続音に変換するプラグインがあると便利です。）</p>
+        <p>歌ったのに発声がおかしい場合は、原音設定をして修正してください。</p>
+      </div>
+      <div class="box"><h3>説明</h3>
+        <p>最新　ver 1.11</p>
+        <p>音階はF4、連続音の音源です。<br>原音調整済ですが、不備があるかもしれません。</p>
+      </div>
+      ${listen('tototo_v111')}
+      <div class="box">${prof([['名前','注寝ととと'],['読み方','そそぐねととと'],null,
+        ['性格','おだやか'],['身長','160cm'],['年齢','17歳'],['誕生日(作成日)','21/3/10'],['体重','不明(90MB前後)'],null,
+        ['好き','お茶を淹れること、楽しげなもの'],['苦手','変化']])}</div>
+      <p>毎日楽しそうに過ごしている女の子。<br>体重は測らせてくれない。<br>とと　とは家族のようなもの。<br>誰かに心をもらったらしい。</p>
+    </div>
+  </div>
+  <h2 class="ttl">Download</h2>
+  <div class="dl">
+    <div class="dl-item">
+      ${ext('https://drive.google.com/file/d/1T_n_ZN4nhzjnDD2yRwe6MuthU1UcneYo/view?usp=sharing','注寝ととと_連続音v1.11','btn')}
+      <p>音階はF4、連続音の音源です。<br>いくつかの歌を歌わせて原音設定をしたので、発声しない音が減っています<br>まだ「ち」とか「し」とか　かなり怪しい</p>
+    </div>
+    <div class="dl-item">
+      ${ext('https://drive.google.com/file/d/1ZuM6YRQl8YbAfkIJuxh_CsWm7KAtk1uq/view?usp=share_link','注寝ととと_連続音v1.10','btn')}
+      <p>音階はF4、連続音の音源です。<br>録音し直したためプツプツノイズが入っていないです。</p>
+      ${listen('tototo_v110')}
+    </div>
+    <div class="dl-item">
+      ${ext('https://drive.google.com/file/d/1OEQMi6lmbF82TmApNBVBi5ROvvnMjMl9/view?usp=sharing','注寝ととと_連続音v1.00','btn')}
+      <p>音階はF4、連続音の音源です。<br>録音環境がひどくてぷつぷつとしたノイズが混じっています。<br>原音調整済ですが、初めてやったので不備があるかもしれません。</p>
+      ${listen('tototo_v100')}
+    </div>
+  </div>
+  ${back('utau')}`},
+
+ust:{title:'UST', html:()=>`
+  <h1 class="ttl">UST</h1>
+  <div class="stack">
+    <p>このボタン押すとgoogle driveに繋がります。</p>
+    <p>使用の際には「砂上電力」の名前を明記しておいてください。</p>
+    <p>原曲の作者名も明記しておいてください。</p>
+    <p>ボタンを押した時点でこの規約に同意したとみなします。</p>
+  </div>
+  <div class="btns">${ext('https://drive.google.com/drive/folders/1KNPeDiuQmVL4ofBFx_nXnFK3FRj60T7-?usp=sharing','↑この文章読んでください。','btn')}</div>
+  <div class="stack">
+    <p>配布物一覧</p>
+    <p>----------------------------------------------</p>
+    <p>210614_BigBrother.zip(USTとオケ音源入ってます)</p>
+  </div>
+  ${back('utau')}`},
+
+toto:{title:'注与とと', html:()=>`
+  <h1 class="ttl">注与とと</h1>
+  <div class="char">
+    <img src="${IMG.toto}" alt="注与とと 立ち絵">
+    <div>
+      <div class="box"><h3>使い方</h3>
+        <p>${ext('https://coeiroink.com/','https://coeiroink.com/','u blue')}<br>↑ここからcoeiroinkをDL後</p>
+        <p>ソフトのexeファイルのある階層のspeaker_infoフォルダに<br>解凍した数字とアルファベットだらけのファイルを入れてください。</p>
+      </div>
+      <div class="box"><h3>説明</h3>
+        <p>発声練習</p><p>100epochほど回しました。</p><p>そのうち立ち絵に表情差分をつけます　そのうち</p>
+      </div>
+      ${listen(['toto_1','toto_2','toto_3'])}
+      <div class="box">${prof([['名前','注与とと'],['読み方','そそぐよとと'],null,
+        ['性格','静か'],['身長','160cm'],['年齢','17歳'],['誕生日(作成日)','22/09/29'],['体重','228MB'],null,
+        ['好き','さみしげなもの'],['苦手','歌']])}</div>
+      <p>ととと　とは家族のようなもの。</p>
+    </div>
+  </div>
+  <h2 class="ttl">Download</h2>
+  <div class="dl"><div class="dl-item">
+    ${ext('https://drive.google.com/file/d/1SCG_beS8OIy6UH4q8iQhIO92DNjdkiL0/view?usp=share_link','注与とと　ver1.00','btn')}
+    <p>喋る</p>
+  </div></div>
+  ${back('mycoe')}`},
+
+works:{title:'作品', html:()=>`
+  <p class="cap">下に行くほど新しいと思う　多分</p>
+  <div class="works">${WORKS.map(w=>`<div class="work">${embed(w)}${w.cap?`<p class="cap">${w.cap}</p>`:''}</div>`).join('')}</div>
+  <p class="cap">作っていただいたカバーのリンクをひっそりと置くところ<br>（怒られたら消します）</p>
+  ${FAN_COVERS.length?`<ul>${FAN_COVERS.map(c=>`<li>${ext(c.url,c.title)}</li>`).join('')}</ul>`:''}`},
+
+gallery:{title:'絵', html:()=>`
+  <p class="cap">絵を置いている</p>
+  <div class="gallery">${GALLERY.map((src,i)=>`<button data-src="${src}" aria-label="絵 ${i+1} を拡大"><img src="${src}" alt="" loading="lazy"></button>`).join('')}</div>`},
+};
+
+/* ======================================================
+   ルーター・UI
+   ====================================================== */
+const main = document.getElementById('main');
+const nav = document.getElementById('nav'), burger = document.getElementById('burger');
+function openNav(){nav.classList.add('open');burger.setAttribute('aria-expanded','true');document.body.style.overflow='hidden'}
+function closeNav(){nav.classList.remove('open');burger.setAttribute('aria-expanded','false');document.body.style.overflow=''}
+burger.addEventListener('click',openNav);
+document.getElementById('close').addEventListener('click',closeNav);
+
+function render(){
+  const key = location.hash.slice(1) || 'home';
+  const p = PAGES[key] || PAGES.home;
+  main.innerHTML = p.full ? p.html() : `<div class="wrap page">${p.html()}</div>`;
+  document.title = p === PAGES.home ? '砂上天獄' : `${p.title} | 砂上天獄`;
+  document.querySelectorAll('.menu a').forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+key));
+  main.querySelectorAll('[data-audio]').forEach(a=>a.addEventListener('error',()=>{
+    const s=document.createElement('span');s.className='na';s.textContent='試聴音声は準備中です';a.replaceWith(s);
+  },{once:true}));
+  loadX();
+  closeNav();
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',render);
+
+const lb=document.getElementById('lb'), lbImg=document.getElementById('lbImg');
+const closeLb=()=>{lb.hidden=true;lbImg.src=''};
+main.addEventListener('click',e=>{const b=e.target.closest('.gallery button');if(!b)return;lbImg.src=b.dataset.src;lb.hidden=false});
+lb.addEventListener('click',e=>{if(e.target!==lbImg)closeLb()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLb();closeNav()}});
+
+render();
+</script>
+</body>
+</html>
