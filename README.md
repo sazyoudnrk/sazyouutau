@@ -22,6 +22,9 @@ UTAU・MYCOE配布サイト（旧 nanashie.wixsite.com/sazyouutau）
 ```
 img/
   tototo.png        注寝ととと 立ち絵（ホーム・詳細）
+  top/              トップのスライド画像（index.html の HERO に並べた順に表示）
+    top2.webp       立ち絵（全身）
+    top3.webp       設定画
   tototo_icon.png   注寝ととと UTAUページの四角いアイコン
   toto.png          注与とと 立ち絵
   toto_icon.png     注与とと MYCOEページの四角いアイコン
