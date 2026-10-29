@@ -558,7 +558,7 @@ const SING = (() => {
   // ---- 設定 ----
   const KOE_BASE = 'https://cdn.jsdelivr.net/npm/@onjmin/koe@1.0.11/dist/';
   const VOICE_URL = 'voice/tototo.koe';
-  const STORE_KEY = 'sazyouutau-sing-v1';
+  const STORE_KEY = 'sazyouutau-sing-v2';
   const TPQ = 480;                 // 4分音符あたりのtick（UST準拠）
   const FS = 48000;
   const TOP = 84, BOTTOM = 48;     // C6〜C3
@@ -591,17 +591,45 @@ const SING = (() => {
   // USTの歌詞（"a か" や "- か" 形式も）から仮名部分だけを取り出す
   const lyricFromUst = s => { s = s.trim(); const sp = s.lastIndexOf(' '); return toHira(sp >= 0 ? s.slice(sp + 1) : s); };
 
-  // ---- サンプル曲（メロディはきらきら星／歌詞は書き下ろし） ----
-  const SAMPLE = (() => {
-    const A = [65,65,72,72,74,74,72], B = [70,70,69,69,67,67,65], C = [72,72,70,70,69,69,67];
-    const lines = [[A,'おちゃをいれよう'],[B,'ゆげがのぼるよ'],[C,'まどをあけたら'],[C,'そらがひかるよ'],[A,'おちゃをいれよう'],[B,'ふたりでのもう']];
+  // ---- サンプル曲（どちらも著作権の切れたメロディ） ----
+  // [歌詞, 長さ(4分=1), 音程] の並び。「ー」は前の母音を伸ばす
+  const song = (tempo, rows) => {
     const notes = []; let t = 0;
-    for (const [mel, ly] of lines) {
-      const mora = splitMora(ly);
-      mel.forEach((m, i) => { const len = i === 6 ? 720 : 480; notes.push({ t, len, midi: m, ly: mora[i] }); t += i === 6 ? 960 : 480; });
-    }
-    return { tempo: 104, notes, gender: 0.5, tension: 0.5, breath: 0.5 };
-  })();
+    for (const [ly, beats, midi, rest] of rows) { const len = Math.round(beats * TPQ); notes.push({ t, len, midi, ly }); t += len + Math.round((rest || 0) * TPQ); }
+    return { tempo, notes, gender: 0.5, tension: 0.5, breath: 0.5 };
+  };
+  const SAMPLES = {
+    // さくらさくら：日本古謡（1888年『箏曲集』、作詞作曲者不詳）。歌詞は当時の「やよいの空は」
+    sakura: { title: 'さくらさくら（日本古謡）', ...(() => {
+      const ra = 69, si = 71, do_ = 72, mi = 64, fa = 65;
+      const S = (ly, b, m, r) => [ly, b, m, r];
+      return song(72, [
+        S('さ',1,ra), S('く',1,ra), S('ら',2,si),
+        S('さ',1,ra), S('く',1,ra), S('ら',2,si),
+        S('や',1,ra), S('よ',1,si), S('い',1,do_), S('の',1,si),
+        S('そ',1,ra), S('ら',.5,si), S('ー',.5,ra), S('は',1.5,fa,.5),
+        S('み',1,mi), S('わ',1,do_), S('た',1,mi), S('す',1,fa),
+        S('か',1,mi), S('ぎ',.5,mi), S('ー',.5,do_), S('り',1.5,si,.5),
+        S('か',1,ra), S('す',1,si), S('み',1,do_), S('か',1,si),
+        S('く',1,ra), S('も',.5,si), S('ー',.5,ra), S('か',1.5,fa,.5),
+        S('に',1,mi), S('お',1,do_), S('い',1,mi), S('ぞ',1,fa),
+        S('い',1,mi), S('ず',.5,mi), S('ー',.5,do_), S('る',1.5,si,.5),
+        S('い',1,ra), S('ざ',1,ra), S('や',2,si),
+        S('い',1,ra), S('ざ',1,ra), S('や',2,si),
+        S('み',1,mi), S('に',1,fa), S('ゆ',.5,si), S('ー',.5,ra), S('か',1,fa),
+        S('ん',3.5,mi),
+      ]); })() },
+    // きらきら星：フランス民謡のメロディに書き下ろしの歌詞
+    kira: { title: 'きらきら星（書き下ろし歌詞）', ...(() => {
+      const A = [65,65,72,72,74,74,72], B = [70,70,69,69,67,67,65], C = [72,72,70,70,69,69,67];
+      const rows = [];
+      for (const [mel, ly] of [[A,'おちゃをいれよう'],[B,'ゆげがのぼるよ'],[C,'まどをあけたら'],[C,'そらがひかるよ'],[A,'おちゃをいれよう'],[B,'ふたりでのもう']]) {
+        const mora = splitMora(ly); mel.forEach((m, i) => rows.push([mora[i], i === 6 ? 1.5 : 1, m, i === 6 ? .5 : 0]));
+      }
+      return song(104, rows); })() },
+  };
+  const DEFAULT_SAMPLE = 'sakura';
+  const sampleState = k => { const { title, ...rest } = SAMPLES[k]; return structuredClone(rest); };
 
   // ---- 状態 ----
   let st = load();
@@ -612,8 +640,8 @@ const SING = (() => {
   let el = {};
 
   function load() {
-    try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s && Array.isArray(s.notes)) return { ...SAMPLE, ...s }; } catch {}
-    return structuredClone(SAMPLE);
+    try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s && Array.isArray(s.notes)) return { ...sampleState(DEFAULT_SAMPLE), ...s }; } catch {}
+    return sampleState(DEFAULT_SAMPLE);
   }
   function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(st)); } catch {} }
   const sorted = () => st.notes.map((n, i) => ({ ...n, i })).sort((a, b) => a.t - b.t || b.midi - a.midi);
@@ -636,8 +664,10 @@ const SING = (() => {
   }
 
   // 歌詞＋直前の母音＋音程 → 音源のエイリアス
+  const nextPv = (ly, pv) => ly === 'ー' ? pv : vowelOf(ly);
   function resolve(ly, pv, midi) {
     if (!bank) return null;
+    if (ly === 'ー') ly = VOWEL_KANA[pv] || 'あ';
     const names = bank.manifest.phonemes;
     const has = a => Object.hasOwn(names, a);
     if (has(ly)) return ly;
@@ -663,10 +693,12 @@ const SING = (() => {
     return pcmCache.get(alias);
   }
 
-  // ---- 合成：音符列 → 1本の波形 ----
+  // ---- 合成：音符列 → フレーズごとの波形 ----
   // 連続音は先行発声が長いので、2音目以降は手前90msだけ残して前の音と35msクロスフェードする（koeのデモと同じ考え方）
-  async function renderMix(notes, onProgress) {
-    const LEAD0 = 0.25, LEADCAP = 90, XF = 35, MINXF = 5, TAIL = 10;
+  // 休符で区切られたフレーズができるたびに onPhrase(波形, 開始サンプル) を呼ぶ → できたところから鳴らせる
+  const LEAD0 = 0.4;
+  async function renderMix(notes, onProgress, onPhrase) {
+    const LEADCAP = 90, XF = 35, MINXF = 5, TAIL = 10;
     const msPerTick = 60000 / st.tempo / TPQ;
     // 単音化：重なりは後ろの音符の頭で切る
     const ns = notes.map(n => ({ ...n }));
@@ -678,19 +710,38 @@ const SING = (() => {
       const chained = n.t === prevEnd && pv !== '-';
       n.alias = resolve(n.ly, chained ? pv : '-', n.midi);
       n.chained = chained;
-      pv = n.alias ? vowelOf(n.ly) : '-';
+      pv = n.alias ? nextPv(n.ly, pv) : '-';
       prevEnd = n.t + n.len;
     }
     const uniq = [...new Set(ns.map(n => n.alias).filter(Boolean))];
     let got = 0;
     const queue = uniq.slice();
-    await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) { await getPcm(queue.shift()); onProgress?.(++got / uniq.length * 0.3); } }));
+    await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) { await getPcm(queue.shift()); onProgress?.(++got / uniq.length * 0.15); } }));
 
-    const segs = []; let prev = null, done = 0;
+    const parts = []; let phrase = [], prev = null, done = 0;
+    const ms = v => Math.max(1, Math.round(v / 1000 * FS));
+    const tail = sg => { if (sg) { sg.outLen = TAIL; sg.outAt = sg.end - ms(TAIL); } };
+    const flush = () => {
+      if (!phrase.length) return;
+      const s0 = Math.min(...phrase.map(x => x.start));
+      const e0 = Math.max(...phrase.map(x => Math.min(x.end, x.outAt + ms(x.outLen))));
+      const buf = new Float32Array(Math.max(1, e0 - s0));
+      for (const x of phrase) {
+        const inN = ms(x.inLen), outN = ms(x.outLen), stopAt = Math.min(x.end, x.outAt + outN);
+        for (let p = x.start; p < stopAt; p++) {
+          const k = p - x.start; let g = 1;
+          if (k < inN) g *= Math.sin(Math.PI / 2 * k / inN);
+          if (p >= x.outAt) g *= Math.cos(Math.PI / 2 * Math.min(1, (p - x.outAt) / outN));
+          buf[p - s0] += x.data[k] * g;
+        }
+      }
+      for (let i = 0; i < buf.length; i++) { const v = buf[i]; if (v > 0.9) buf[i] = 0.9 + Math.tanh((v - 0.9) * 10) / 10; else if (v < -0.9) buf[i] = -0.9 - Math.tanh((-v - 0.9) * 10) / 10; }
+      parts.push([buf, s0]); onPhrase?.(buf, s0); phrase = [];
+    };
     for (const n of ns) {
       if (abort) return null;
       const durMs = n.len * msPerTick;
-      if (!n.alias) { if (prev) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; } prev = null; continue; }
+      if (!n.alias) { tail(prev); prev = null; flush(); continue; }
       const entry = bank.manifest.phonemes[n.alias];
       const key = [n.alias, n.midi, Math.round(durMs), st.tempo, st.gender, st.tension, st.breath].join('|');
       let audio = noteCache.get(key);
@@ -700,9 +751,10 @@ const SING = (() => {
           gender: st.gender, tension: st.tension, breathiness: st.breath, ...koe.leadInFromEntry(entry) }) : null;
         if (audio) noteCache.set(key, audio);
       }
-      onProgress?.(0.3 + ++done / ns.length * 0.7);
+      onProgress?.(0.15 + ++done / ns.length * 0.85);
       await new Promise(r => setTimeout(r, 0));
-      if (!audio || !audio.length) { if (prev) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; } prev = null; continue; }
+      if (abort) return null;
+      if (!audio || !audio.length) { tail(prev); prev = null; flush(); continue; }
       const preMs = (entry.pre || 0) / FS * 1000;
       const head = !(n.chained && prev);
       const effPre = head ? preMs : Math.min(preMs, LEADCAP, prev.durMs);
@@ -711,33 +763,19 @@ const SING = (() => {
       const start = Math.max(0, beat - Math.round(effPre / 1000 * FS));
       const data = audio.subarray(Math.min(skip, audio.length));
       const xf = head ? TAIL : Math.max(MINXF, Math.min(effPre, XF));
-      const seg = { data, start, end: start + data.length, inLen: xf, outAt: null, outLen: TAIL, durMs };
-      if (prev) { if (head) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; } else { prev.outAt = start; prev.outLen = xf; } }
-      segs.push(seg); prev = seg;
+      const seg = { data, start, end: start + data.length, inLen: xf, outAt: start + data.length, outLen: TAIL, durMs };
+      if (head) { tail(prev); flush(); } else { prev.outAt = start; prev.outLen = xf; }
+      phrase.push(seg); prev = seg;
     }
-    if (prev) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; }
-    if (!segs.length) return new Float32Array(FS);
-
-    const total = Math.max(...segs.map(s => s.outAt != null ? Math.min(s.end, s.outAt + Math.round(s.outLen / 1000 * FS)) : s.end)) + FS / 4;
+    tail(prev); flush();
+    const total = parts.length ? Math.max(...parts.map(([b, s0]) => s0 + b.length)) + FS / 4 : FS;
     const mix = new Float32Array(total);
-    for (const s of segs) {
-      const inN = Math.max(1, Math.round(s.inLen / 1000 * FS));
-      const outAt = s.outAt == null ? s.end : s.outAt, outN = Math.max(1, Math.round(s.outLen / 1000 * FS));
-      const stop = Math.min(s.end, outAt + outN);
-      for (let p = s.start; p < stop; p++) {
-        const k = p - s.start; let g = 1;
-        if (k < inN) g *= Math.sin(Math.PI / 2 * k / inN);
-        if (p >= outAt) g *= Math.cos(Math.PI / 2 * Math.min(1, (p - outAt) / outN));
-        mix[p] += s.data[k] * g;
-      }
-    }
-    let peak = 0; for (const v of mix) peak = Math.max(peak, Math.abs(v));
-    if (peak > 0.89) for (let p = 0; p < mix.length; p++) mix[p] *= 0.89 / peak;
-    mix.lead = LEAD0;
+    for (const [b, s0] of parts) for (let i = 0; i < b.length; i++) mix[s0 + i] += b[i];
     return mix;
   }
 
   // ---- 再生 ----
+  let srcs = [];
   function getCtx() {
     if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; ctx = new AC({ sampleRate: FS }); }
     if (ctx.state === 'suspended') ctx.resume();
@@ -745,24 +783,9 @@ const SING = (() => {
   }
   function stop() {
     abort = true;
-    if (src) { try { src.stop(); } catch {} src = null; }
+    for (const x of srcs) { try { x.stop(); } catch {} }
+    srcs = []; src = null;
     cancelAnimationFrame(raf); if (el.head) el.head.hidden = true;
-    refreshButtons();
-  }
-  function playBuffer(mix, fromTick = 0) {
-    const c = getCtx();
-    const buf = c.createBuffer(1, mix.length, FS); buf.copyToChannel(mix, 0);
-    src = c.createBufferSource(); src.buffer = buf; src.connect(c.destination);
-    const msPerTick = 60000 / st.tempo / TPQ;
-    playStart = c.currentTime + 0.05 + mix.lead - fromTick * msPerTick / 1000;
-    src.onended = () => { if (src && src.buffer === buf) { src = null; cancelAnimationFrame(raf); el.head.hidden = true; refreshButtons(); } };
-    src.start(c.currentTime + 0.05);
-    const tick = () => {
-      const tk = (c.currentTime - playStart) * 1000 / msPerTick;
-      if (tk >= 0) { el.head.hidden = false; el.head.style.left = (tk * ppt) + 'px'; follow(tk * ppt); }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
     refreshButtons();
   }
   function follow(x) {
@@ -770,17 +793,44 @@ const SING = (() => {
     if (x < r.scrollLeft || x > r.scrollLeft + vis * 0.8) r.scrollLeft = Math.max(0, x - vis * 0.2);
   }
   async function sing(notes, fromTick = 0, label = '合成中') {
-    getCtx();                       // iPhoneはタップ中にAudioContextを起こす必要がある
+    const c = getCtx();             // iPhoneはタップ中にAudioContextを起こす必要がある
     stop(); abort = false;
     await ensureVoice(); if (!bank || !wl) return;
     busy = true; refreshButtons();
+    const msPerTick = 60000 / st.tempo / TPQ;
+    let T0 = null, lastEnd = 0, endTimer = 0;
+    const startHead = () => {
+      playStart = T0 + LEAD0 - fromTick * msPerTick / 1000;
+      const tick = () => {
+        const tk = (c.currentTime - playStart) * 1000 / msPerTick + fromTick;
+        if (tk >= fromTick) { el.head.hidden = false; el.head.style.left = (tk * ppt) + 'px'; follow(tk * ppt); }
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const onPhrase = (buf, s0) => {
+      if (abort) return;
+      if (T0 === null) { T0 = c.currentTime + 0.12 - s0 / FS; startHead(); src = true; }
+      const when = T0 + s0 / FS, now = c.currentTime + 0.02;
+      const off = Math.max(0, now - when);           // 合成が追いつかなかった分は頭を飛ばす
+      if (off * FS >= buf.length) return;
+      const b = c.createBuffer(1, buf.length, FS); b.copyToChannel(buf, 0);
+      const x = c.createBufferSource(); x.buffer = b; x.connect(c.destination);
+      x.start(Math.max(when, now), off); srcs.push(x);
+      lastEnd = Math.max(lastEnd, when + buf.length / FS);
+      refreshButtons();
+    };
     try {
-      const mix = await renderMix(notes, p => { el.prog.style.width = (p * 100).toFixed(1) + '%'; setStatus(`${label}… ${Math.round(p * 100)}%`); });
+      const mix = await renderMix(notes, p => { el.prog.style.width = (p * 100).toFixed(1) + '%'; if (T0 === null) setStatus(`${label}… ${Math.round(p * 100)}%`); }, onPhrase);
       if (!mix || abort) return;
       lastMix = mix;
       const miss = notes.filter(n => !resolve(n.ly, '-', n.midi) && !resolve(n.ly, 'a', n.midi)).length;
       setStatus(miss ? `再生中（歌えない歌詞が ${miss} 個あります。赤い縞の音符を確認してください）` : '再生中', !!miss);
-      playBuffer(mix, fromTick);
+      if (T0 !== null) {
+        const myRun = srcs;
+        clearTimeout(endTimer);
+        endTimer = setTimeout(() => { if (srcs === myRun) { srcs = []; src = null; cancelAnimationFrame(raf); el.head.hidden = true; setStatus('歌い終わりました'); refreshButtons(); } }, Math.max(0, (lastEnd - c.currentTime) * 1000 + 100));
+      }
     } catch (e) { console.error(e); setStatus('合成に失敗しました：' + e.message, true); }
     finally { busy = false; el.prog.style.width = '0'; refreshButtons(); paint(); }
   }
@@ -804,7 +854,7 @@ const SING = (() => {
   }
   function paint() {
     const ord = sorted(); let pv = '-', prevEnd = -1; const miss = new Set();
-    if (bank) for (const n of ord) { const a = resolve(n.ly, n.t === prevEnd ? pv : '-', n.midi); if (!a) miss.add(n.i); pv = a ? vowelOf(n.ly) : '-'; prevEnd = n.t + n.len; }
+    if (bank) for (const n of ord) { const a = resolve(n.ly, n.t === prevEnd ? pv : '-', n.midi); if (!a) miss.add(n.i); pv = a ? nextPv(n.ly, pv) : '-'; prevEnd = n.t + n.len; }
     el.grid.querySelectorAll('.note').forEach(x => x.remove());
     const frag = document.createDocumentFragment();
     st.notes.forEach((n, i) => {
@@ -1013,7 +1063,7 @@ const SING = (() => {
     <div class="in">
       <div class="stack">
         <label for="sgBulk" class="sg-note">ひらがなで歌詞を書いて「流し込む」を押すと、選んでいる音符（なければ最初の音符）から順に1文字ずつ入ります。「きゃ」などの小さい字はまとめて1音になります。</label>
-        <textarea id="sgBulk" placeholder="おちゃをいれよう ゆげがのぼるよ"></textarea>
+        <textarea id="sgBulk" placeholder="さくら さくら やよいのそらは"></textarea>
         <div class="sg-files"><button class="sg-btn" id="sgPour">流し込む</button></div>
       </div>
       <div class="sg-sliders">
@@ -1025,7 +1075,7 @@ const SING = (() => {
         <label class="sg-btn" for="sgUst" style="display:inline-flex;align-items:center">USTを読み込む</label><input type="file" id="sgUst" accept=".ust">
         <button class="sg-btn" id="sgUstSave">USTで保存</button>
         <button class="sg-btn" id="sgWav" disabled>WAVで保存</button>
-        <button class="sg-btn" id="sgReset">サンプル曲に戻す</button>
+        <span class="sg-files"><select id="sgSample" aria-label="サンプル曲" style="font:inherit;font-size:16px;min-height:42px;border:1px solid var(--btn);background:var(--white);color:var(--ink)">${Object.entries(SAMPLES).map(([k, v]) => `<option value="${k}">${v.title}</option>`).join('')}</select><button class="sg-btn" id="sgReset">サンプル曲を読み込む</button></span>
         <button class="sg-btn" id="sgClear">全部消す</button>
       </div>
       <p class="sg-note">合成には <a class="u" href="https://github.com/onjmin/koe" target="_blank" rel="noopener">koe</a>（WORLDボコーダ / OpenUtau worldline）を使っています。作った曲はこのブラウザに自動で保存されます。歌わせたものを公開する場合は<a class="u" href="#terms">利用規約</a>に沿ってください。</p>
@@ -1060,7 +1110,13 @@ const SING = (() => {
     $('sgUst').addEventListener('change', e => { const f = e.target.files[0]; if (f) readUst(f); e.target.value = ''; });
     $('sgUstSave').addEventListener('click', writeUst);
     el.wav.addEventListener('click', writeWav);
-    $('sgReset').addEventListener('click', () => { if (!confirm('サンプル曲に戻しますか？（今の曲は消えます）')) return; stop(); st = structuredClone(SAMPLE); sel = -1; save(); el.tempo.value = st.tempo; mount(); });
+    $('sgReset').addEventListener('click', () => {
+      const k = $('sgSample').value;
+      if (!confirm(`「${SAMPLES[k].title}」を読み込みますか？（今の曲は消えます）`)) return;
+      stop(); st = sampleState(k); sel = -1; save(); el.tempo.value = st.tempo;
+      for (const [id, key] of [['sgGender', 'gender'], ['sgTension', 'tension'], ['sgBreath', 'breath']]) { $(id).value = st[key]; $(id + 'V').textContent = (+st[key]).toFixed(2); }
+      lastTotal = 0; layoutIfGrown(); paint(); el.roll.scrollLeft = 0; scrollToNote(sorted()[0]); setStatus(`「${SAMPLES[k].title}」を読み込みました`);
+    });
     $('sgClear').addEventListener('click', () => { if (!confirm('音符を全部消しますか？')) return; stop(); st.notes = []; sel = -1; save(); paint(); });
     bindGrid();
     document.addEventListener('keydown', onKey);
