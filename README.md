@@ -36,7 +36,7 @@ audio/
   toto_3.mp3        試聴3
 ```
 
-## 歌わせてみる（#sing）
+## 歌わせる（#sing）
 
 [@onjmin/koe](https://github.com/onjmin/koe)（WORLDボコーダ / OpenUtau worldline）でブラウザ上で注寝とととを歌わせるページ。
 

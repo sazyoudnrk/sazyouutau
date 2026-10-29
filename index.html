@@ -169,8 +169,11 @@ hr{border:0;border-top:2px solid var(--rule);margin:0}
 .lb button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));
   background:none;border:0;color:#fff;font-size:34px;cursor:pointer;line-height:1}
 
-/* ===== 歌わせてみる ===== */
-.sg-intro{display:flex;flex-direction:column;gap:4px}
+/* ===== 歌わせる ===== */
+.sg-help{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.sg-helpbody{background:var(--white);padding:12px 14px;line-height:1.8}
+.sg-helpbody p{margin:0}
+.sg-helpbody[hidden]{display:none}
 .sg-status{font-size:14px;color:var(--ink);background:var(--white);padding:10px 14px;border-left:4px solid var(--title)}
 .sg-status.err{border-color:var(--red)}
 .sg-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -243,7 +246,7 @@ footer{background:var(--btn);color:var(--ink);text-align:center;font-size:13px;p
             <li><a href="#terms">利用規約</a></li>
             <li><a href="#tototo">注寝ととと</a></li>
             <li><a href="#ust">UST</a></li>
-            <li><a href="#sing">歌わせてみる</a></li>
+            <li><a href="#sing">歌わせる</a></li>
           </ul>
         </li>
         <li><a href="#mycoe">MYCOE</a>
@@ -397,7 +400,7 @@ utau:{title:'UTAU', html:()=>`
   </div>
   <p class="hint">画像をクリックで詳細へ</p>
   ${vcard('tototo', IMG.tototoIcon, '注寝ととと', '最初で最後かもしれない音源です。', 'tototo_v111')}
-  <div class="btns"><a class="btn" href="#sing">ブラウザで歌わせてみる</a></div>`},
+  <div class="btns"><a class="btn" href="#sing">ブラウザで歌わせる</a></div>`},
 
 mycoe:{title:'MYCOE', html:()=>`
   <div class="btns">${ext('https://coeiroink.com/terms','利用規約','btn')}</div>
@@ -471,7 +474,7 @@ tototo:{title:'注寝ととと', html:()=>`
         <p>音階はF4、連続音の音源です。<br>原音調整済ですが、不備があるかもしれません。</p>
       </div>
       ${listen('tototo_v111')}
-      <div class="btns"><a class="btn" href="#sing">ブラウザで歌わせてみる</a></div>
+      <div class="btns"><a class="btn" href="#sing">ブラウザで歌わせる</a></div>
       <div class="box">${prof([['名前','注寝ととと'],['読み方','そそぐねととと'],null,
         ['性格','おだやか'],['身長','160cm'],['年齢','17歳'],['誕生日(作成日)','21/3/10'],['体重','不明(90MB前後)'],null,
         ['好き','お茶を淹れること、楽しげなもの'],['苦手','変化']])}</div>
@@ -545,7 +548,7 @@ works:{title:'作品', html:()=>`
   <p class="cap">作っていただいたカバーのリンクをひっそりと置くところ<br>（怒られたら消します）</p>
   ${FAN_COVERS.length?`<ul>${FAN_COVERS.map(c=>`<li>${ext(c.url,c.title)}</li>`).join('')}</ul>`:''}`},
 
-sing:{title:'歌わせてみる', html:()=>SING.html(), mount:()=>SING.mount(), unmount:()=>SING.unmount()},
+sing:{title:'歌わせる', html:()=>SING.html(), mount:()=>SING.mount(), unmount:()=>SING.unmount()},
 
 gallery:{title:'絵', html:()=>`
   <p class="cap">絵を置いている</p>
@@ -553,7 +556,7 @@ gallery:{title:'絵', html:()=>`
 };
 
 /* ======================================================
-   歌わせてみる（@onjmin/koe + worldline）
+   歌わせる（@onjmin/koe + worldline）
    ====================================================== */
 const SING = (() => {
   // ---- 設定 ----
@@ -1181,10 +1184,12 @@ const SING = (() => {
     const lens = [[120, '1/16'], [240, '1/8'], [480, '1/4'], [960, '1/2'], [1920, '1']];
     const keys = Array.from({ length: ROWS }, (_, r) => { const m = TOP - r, b = BLACK.has(m % 12), c = m % 12 === 0; return `<div class="${b ? 'b' : ''}${c ? ' c' : ''}" data-midi="${m}">${c || !b ? midiName(m) : ''}</div>`; }).join('');
     return `
-  <h1 class="ttl">歌わせてみる</h1>
-  <div class="sg-intro">
-    <p>注寝とととに、好きなメロディを歌わせられます。</p>
-    <p>「書く」で空いているところをタップすると音符が置けます。音符はドラッグで移動、右端のドラッグで長さを変えられます。歌詞はひらがなで入れると、前の音とのつながりから連続音（「a か」など）に自動でなります。</p>
+  <h1 class="ttl">歌わせる</h1>
+  <div class="sg-help">
+    <button class="sg-btn" id="sgHelpBtn" aria-expanded="false" aria-controls="sgHelpBody">ヘルプ</button>
+    <div class="sg-helpbody" id="sgHelpBody" hidden>
+      <p>「書く」で空いているところをタップすると音符が置けます。音符はドラッグで移動、右端のドラッグで長さを変えられます。歌詞はひらがなで入れると、前の音とのつながりから連続音（「a か」など）に自動でなります。</p>
+    </div>
   </div>
   <div class="sg-status" id="sgStatus" role="status">読み込み中…</div>
   <div class="sg-prog"><i id="sgProg"></i></div>
@@ -1236,6 +1241,8 @@ const SING = (() => {
 
   function mount() {
     const $ = id => document.getElementById(id);
+    { const hb = $('sgHelpBtn'), hd = $('sgHelpBody');
+      hb.addEventListener('click', () => { const o = hd.hidden; hd.hidden = !o; hb.setAttribute('aria-expanded', String(o)); }); }
     el = { status: $('sgStatus'), prog: $('sgProg'), play: $('sgPlay'), stop: $('sgStop'), tempo: $('sgTempo'), roll: $('sgRoll'), grid: $('sgGrid'),
       ticks: $('sgTicks'), keys: $('sgKeys'), head: $('sgHead'), panel: $('sgPanel'), bulk: $('sgBulk'), wav: $('sgWav'), modes: [...document.querySelectorAll('[data-mode]')] };
     el.tempo.value = st.tempo;
