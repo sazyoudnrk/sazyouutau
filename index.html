@@ -172,7 +172,9 @@ hr{border:0;border-top:2px solid var(--rule);margin:0}
 /* ===== 歌わせる ===== */
 .sg-help{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .sg-helpbody{background:var(--white);padding:12px 14px;line-height:1.8}
-.sg-helpbody p{margin:0}
+.sg-helpbody p{margin:0 0 8px}
+.sg-helpbody p:last-child{margin:0}
+.sg-ver{font-size:13px;color:var(--ink);opacity:.8}
 .sg-helpbody[hidden]{display:none}
 .sg-status{font-size:14px;color:var(--ink);background:var(--white);padding:10px 14px;border-left:4px solid var(--title)}
 .sg-status.err{border-color:var(--red)}
@@ -607,7 +609,8 @@ const SING = (() => {
     kimi: { title: '君の席（砂上電力）', ...ustSong(170, KIMI) },
   };
   const DEFAULT_SAMPLE = 'kimi';
-  const sampleState = k => { const { title, ...rest } = SAMPLES[k]; return structuredClone(rest); };
+  const SING_VER = '1.2';
+  const sampleState = k => { const { title, ...rest } = SAMPLES[k]; return { ...structuredClone(rest), cv: true }; };
 
   // ---- 状態 ----
   let st = load();
@@ -624,7 +627,7 @@ const SING = (() => {
         // 前のサンプル曲（さくらさくら・きらきら星）が、手を加えずにそのまま保存されているだけなら、新しいサンプルに置き換える
         const n0 = s.notes[0] || {};
         if ((s.tempo === 72 && s.notes.length === 50 && n0.ly === 'さ') || (s.tempo === 104 && s.notes.length === 42 && n0.ly === 'お')) return sampleState(DEFAULT_SAMPLE);
-        return { ...sampleState(DEFAULT_SAMPLE), ...s };
+        return { ...sampleState(DEFAULT_SAMPLE), ...s, cv: s.cv !== false };
       }
     } catch {}
     return sampleState(DEFAULT_SAMPLE);
@@ -715,7 +718,7 @@ const SING = (() => {
     // 先にエイリアスを決めて、必要な音素をまとめて取得
     let pv = '-', prevEnd = -1, prevMidi = null;
     for (const n of ns) {
-      const chained = n.t === prevEnd && pv !== '-';
+      const chained = st.cv && n.t === prevEnd && pv !== '-';
       n.alias = resolve(n.ly, chained ? pv : '-', n.midi);
       n.chained = chained; n.prevMidi = chained ? prevMidi : null; prevMidi = n.alias ? n.midi : null;
       pv = n.alias ? nextPv(n.ly, chained ? pv : '-') : '-';
@@ -877,11 +880,11 @@ const SING = (() => {
   function vcv() {
     const ord = sorted(), label = new Map(), miss = new Set(); let pv = '-', prevEnd = -1;
     for (const n of ord) {
-      const p = n.t === prevEnd ? pv : '-';
+      const p = st.cv && n.t === prevEnd ? pv : '-';
       const kana = n.ly === 'ー' ? (VOWEL_KANA[p] || 'あ') : n.ly;
       const a = bank ? resolve(n.ly, p, n.midi) : null;
       if (bank && !a) miss.add(n.i);
-      label.set(n.i, a || `${p} ${kana}`);
+      label.set(n.i, !st.cv ? kana : (a || `${p} ${kana}`));
       pv = (!bank || a) ? nextPv(n.ly, p) : '-';
       prevEnd = n.t + n.len;
     }
@@ -912,7 +915,7 @@ const SING = (() => {
       <span class="grp"><span class="lbl">位置</span><button class="sg-btn" data-act="left" aria-label="前へ">◀</button><button class="sg-btn" data-act="right" aria-label="後ろへ">▶</button></span>
       <span class="grp"><button class="sg-btn" data-act="hear">♪ この音</button><button class="sg-btn" data-act="from">ここから歌う</button><button class="sg-btn" data-act="del">消す</button></span>`;
     const inp = el.panel.querySelector('#sgLyric');
-    inp.addEventListener('input', () => { const v = lyricFromUst(inp.value); if (v) { st.notes[sel].ly = v; save(); paintNoteText(); } });
+    inp.addEventListener('input', () => { const v = lyricFromUst(inp.value); if (v) { st.notes[sel].ly = v; st.cv = false; save(); paintNoteText(); } });
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); selectNext(1, true); } });
   }
   // 歌詞の入力中：自分と後ろの音符の連続音表示を更新（入力欄のフォーカスは保つ）
@@ -934,7 +937,9 @@ const SING = (() => {
   function setStatus(t, err) { if (el.status) { el.status.textContent = t; el.status.classList.toggle('err', !!err); } }
   function refreshButtons() {
     if (!el.play) return;
+    const $cv = document.getElementById('sgCv');
     el.play.disabled = busy || !!voiceErr;
+    $cv.disabled = busy || !!voiceErr;
     el.play.textContent = busy ? '合成中…' : '▶ 歌う';
     el.stop.disabled = !src && !busy;
     el.wav.disabled = !lastMix;
@@ -998,7 +1003,7 @@ const SING = (() => {
       if (mode !== 'write') { sel = -1; paint(); return; }
       const { tick, midi } = gridPos(e);
       const ord = sorted(); const before = ord.filter(n => n.t < tick).pop();
-      st.notes.push({ t: tick, len: snap >= 240 ? snap : 240, midi, ly: nextLyric(before) });
+      st.notes.push({ t: tick, len: snap >= 240 ? snap : 240, midi, ly: nextLyric(before) }); st.cv = false;
       sel = st.notes.length - 1; save(); layoutIfGrown(); paint();
       if (bank) previewQuiet(st.notes[sel]);
     });
@@ -1023,7 +1028,7 @@ const SING = (() => {
     const mora = splitMora(el.bulk.value); if (!mora.length) return;
     const ord = sorted(); let k = Math.max(0, ord.findIndex(n => n.i === sel)); if (sel < 0) k = 0;
     let c = 0; for (; k < ord.length && c < mora.length; k++, c++) st.notes[ord[k].i].ly = mora[c];
-    save(); paint();
+    st.cv = false; save(); paint();
     setStatus(`${c} 個の音符に歌詞を入れました` + (c < mora.length ? `（音符が足りず ${mora.length - c} 文字あまりました）` : ''));
   }
 
@@ -1040,7 +1045,7 @@ const SING = (() => {
       .sort((a, b) => a.t - b.t || b.midi - a.midi)
       .filter((n, i, arr) => i === 0 || n.t !== arr[i - 1].t);      // 和音は一番高い音だけ
     if (!notes.length) { setStatus(`${name} に音符が見つかりませんでした`, true); return; }
-    stop(); st = { ...st, tempo: Math.round(tempo * 100) / 100, notes }; sel = -1; save();
+    stop(); st = { ...st, tempo: Math.round(tempo * 100) / 100, notes, cv: true }; sel = -1; save();
     el.tempo.value = st.tempo; lastTotal = 0; layoutIfGrown(); paint(); el.roll.scrollLeft = 0; scrollToNote(sorted()[0]);
     setStatus(`${name} を読み込みました（${notes.length} 音符 / テンポ ${st.tempo}）`);
   }
@@ -1185,16 +1190,21 @@ const SING = (() => {
     const keys = Array.from({ length: ROWS }, (_, r) => { const m = TOP - r, b = BLACK.has(m % 12), c = m % 12 === 0; return `<div class="${b ? 'b' : ''}${c ? ' c' : ''}" data-midi="${m}">${c || !b ? midiName(m) : ''}</div>`; }).join('');
     return `
   <h1 class="ttl">歌わせる</h1>
+  <p class="sg-ver" style="margin:-6px 0 0">ver ${SING_VER}</p>
   <div class="sg-help">
     <button class="sg-btn" id="sgHelpBtn" aria-expanded="false" aria-controls="sgHelpBody">ヘルプ</button>
     <div class="sg-helpbody" id="sgHelpBody" hidden>
-      <p>「書く」で空いているところをタップすると音符が置けます。音符はドラッグで移動、右端のドラッグで長さを変えられます。歌詞はひらがなで入れると、前の音とのつながりから連続音（「a か」など）に自動でなります。</p>
+      <p>「書く」で空いているところをタップすると音符が置けます。音符はドラッグで移動、右端のドラッグで長さを変えられます。</p>
+      <p>歌詞はふつうに「あいうえお」とひらがなで入れます。このままだと、音は前の音とつながらず、ひとつずつ歌います。</p>
+      <p>「連続音にして歌う」を押すと、前の音とのつながりから連続音（「a か」など）に変わって、そのまま歌います。歌詞や音符を書き換えると、またふつうの状態に戻るので、もう一度押してください。読み込んだ曲とサンプル曲は、はじめから連続音になっています。</p>
+      <p class="sg-ver">歌声エンジン：<a href="https://github.com/onjmin/koe" target="_blank" rel="noopener">@onjmin/koe</a>（MIT）・OpenUtau worldline（MIT）／ WORLD ボコーダ（修正BSD）</p>
     </div>
   </div>
   <div class="sg-status" id="sgStatus" role="status">読み込み中…</div>
   <div class="sg-prog"><i id="sgProg"></i></div>
   <div class="sg-bar">
     <button class="sg-btn main" id="sgPlay">▶ 歌う</button>
+    <button class="sg-btn" id="sgCv">連続音にして歌う</button>
     <button class="sg-btn" id="sgStop">■ 止める</button>
     <label>テンポ <input type="number" id="sgTempo" min="40" max="300" step="1" inputmode="numeric"></label>
     <span class="sg-seg" role="group" aria-label="モード"><button class="sg-btn" data-mode="write">書く</button><button class="sg-btn" data-mode="select">選ぶ</button><button class="sg-btn" data-mode="erase">消す</button></span>
@@ -1251,6 +1261,7 @@ const SING = (() => {
     const first = sorted()[0]; el.roll.scrollTop = first ? Math.max(0, (TOP - first.midi) * 22 - el.roll.clientHeight / 2) : (TOP - 67) * 22;
 
     el.play.addEventListener('click', () => sing(sorted(), 0));
+    $('sgCv').addEventListener('click', () => { st.cv = true; save(); paint(); sing(sorted(), 0); });
     el.stop.addEventListener('click', () => { stop(); setStatus('止めました'); });
     el.tempo.addEventListener('change', () => { const v = Math.max(40, Math.min(300, +el.tempo.value || 120)); st.tempo = v; el.tempo.value = v; save(); });
     el.modes.forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; refreshButtons(); }));

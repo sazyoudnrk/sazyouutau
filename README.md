@@ -42,6 +42,7 @@ audio/
 
 - 声のデータ: `voice/tototo.koe`（注寝ととと 連続音 v1.11 を koe 形式に変換したもの。1017音素）
   - 音源を更新したら、koe の [DEMO](https://onjmin.github.io/koe/demo) の「変換」で新しい zip から `.koe` を作り、同じ名前で置き換える
+- 歌わせる ver 1.2：歌詞はふつうに入力→「連続音にして歌う」で連続音化して再生
 - ライブラリ本体と worldline は jsDelivr の `@onjmin/koe@1.0.11` から読み込む
 - 作った曲は見た人のブラウザ（localStorage）に保存される
 - 読み込み：UST / USTX（OpenUtau、js-yaml を cdnjs から読み込み）/ MIDI（歌詞イベント FF05 対応）。保存：UST / USTX / MIDI / WAV
