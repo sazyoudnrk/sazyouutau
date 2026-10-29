@@ -43,7 +43,9 @@ audio/
 - 声のデータ: `voice/tototo.koe`（注寝ととと 連続音 v1.11 を koe 形式に変換したもの。1017音素）
   - 音源を更新したら、koe の [DEMO](https://onjmin.github.io/koe/demo) の「変換」で新しい zip から `.koe` を作り、同じ名前で置き換える
 - ライブラリ本体と worldline は jsDelivr の `@onjmin/koe@1.0.11` から読み込む
-- 作った曲は見た人のブラウザ（localStorage）に保存される。UST の読み込み・保存、WAV 保存あり
+- 作った曲は見た人のブラウザ（localStorage）に保存される
+- 読み込み：UST / USTX（OpenUtau、js-yaml を cdnjs から読み込み）/ MIDI（歌詞イベント FF05 対応）。保存：UST / USTX / MIDI / WAV
+- 音の変わり目は、つなぎ（前の母音）の間は前の音の高さを保ち、拍の45ms前〜35ms後で次の音へ移る
 - サンプル曲は「さくらさくら」（日本古謡・1888年箏曲集の歌詞）と「きらきら星」（書き下ろし歌詞）。`index.html` の `SAMPLES`
 - 歌詞はひらがなで持ち、表示・UST保存では前の音符とのつながりから連続音のエイリアス（`- さ` `a く` …）にする
 

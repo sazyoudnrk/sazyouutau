@@ -607,13 +607,13 @@ const SING = (() => {
         S('さ',1,ra), S('く',1,ra), S('ら',2,si),
         S('さ',1,ra), S('く',1,ra), S('ら',2,si),
         S('や',1,ra), S('よ',1,si), S('い',1,do_), S('の',1,si),
-        S('そ',1,ra), S('ら',.5,si), S('ー',.5,ra), S('は',1.5,fa,.5),
+        S('そ',1,ra), S('ら',.5,si), S('ー',.5,ra), S('は',2,fa),
         S('み',1,mi), S('わ',1,do_), S('た',1,mi), S('す',1,fa),
-        S('か',1,mi), S('ぎ',.5,mi), S('ー',.5,do_), S('り',1.5,si,.5),
+        S('か',1,mi), S('ぎ',.5,mi), S('ー',.5,do_), S('り',2,si),
         S('か',1,ra), S('す',1,si), S('み',1,do_), S('か',1,si),
-        S('く',1,ra), S('も',.5,si), S('ー',.5,ra), S('か',1.5,fa,.5),
+        S('く',1,ra), S('も',.5,si), S('ー',.5,ra), S('か',2,fa),
         S('に',1,mi), S('お',1,do_), S('い',1,mi), S('ぞ',1,fa),
-        S('い',1,mi), S('ず',.5,mi), S('ー',.5,do_), S('る',1.5,si,.5),
+        S('い',1,mi), S('ず',.5,mi), S('ー',.5,do_), S('る',2,si),
         S('い',1,ra), S('ざ',1,ra), S('や',2,si),
         S('い',1,ra), S('ざ',1,ra), S('や',2,si),
         S('み',1,mi), S('に',1,fa), S('ゆ',.5,si), S('ー',.5,ra), S('か',1,fa),
@@ -727,11 +727,11 @@ const SING = (() => {
     for (let k = 0; k < ns.length - 1; k++) if (ns[k].t + ns[k].len > ns[k + 1].t) ns[k].len = Math.max(30, ns[k + 1].t - ns[k].t);
 
     // 先にエイリアスを決めて、必要な音素をまとめて取得
-    let pv = '-', prevEnd = -1;
+    let pv = '-', prevEnd = -1, prevMidi = null;
     for (const n of ns) {
       const chained = n.t === prevEnd && pv !== '-';
       n.alias = resolve(n.ly, chained ? pv : '-', n.midi);
-      n.chained = chained;
+      n.chained = chained; n.prevMidi = chained ? prevMidi : null; prevMidi = n.alias ? n.midi : null;
       pv = n.alias ? nextPv(n.ly, chained ? pv : '-') : '-';
       prevEnd = n.t + n.len;
     }
@@ -765,11 +765,11 @@ const SING = (() => {
       const durMs = n.len * msPerTick;
       if (!n.alias) { tail(prev); prev = null; flush(); continue; }
       const entry = bank.manifest.phonemes[n.alias];
-      const key = [n.alias, n.midi, Math.round(durMs), st.tempo, st.gender, st.tension, st.breath].join('|');
+      const key = [n.alias, n.midi, n.prevMidi, Math.round(durMs), st.tempo, st.gender, st.tension, st.breath].join('|');
       let audio = noteCache.get(key);
       if (!audio) {
         const pcm = await getPcm(n.alias);
-        audio = pcm ? wl.renderNote({ pcm, pitch: midiHz(n.midi), durationMs: durMs, tempo: st.tempo,
+        audio = pcm ? wl.renderNote({ pcm, pitch: pitchCurve(n.prevMidi, n.midi, (entry.pre || 0) / FS * 1000), durationMs: durMs, tempo: st.tempo,
           gender: st.gender, tension: st.tension, breathiness: st.breath, ...koe.leadInFromEntry(entry) }) : null;
         if (audio) noteCache.set(key, audio);
       }
@@ -796,12 +796,20 @@ const SING = (() => {
     return mix;
   }
 
+  // 音程カーブ：拍（= 先行発声の位置）の 45ms 前から 35ms 後にかけて前の音から今の音へ移る。それより前は前の音の高さのまま
+  function pitchCurve(prevMidi, midi, beatMs) {
+    if (prevMidi == null || prevMidi === midi) return midiHz(midi);
+    const a = beatMs - 45, b = beatMs + 35;
+    return t => {
+      const u = t <= a ? 0 : t >= b ? 1 : (1 - Math.cos(Math.PI * (t - a) / (b - a))) / 2;
+      return midiHz(prevMidi + (midi - prevMidi) * u);
+    };
+  }
+
   // ---- 再生 ----
   let srcs = [];
   function getCtx() {
     if (!ctx) {
-      // iPhoneはマナーモードだとWeb Audioが無音になる。「再生」扱いにすればスイッチに関係なく鳴る（iOS 16.4+）
-      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
       const AC = window.AudioContext || window.webkitAudioContext;
       try { ctx = new AC({ sampleRate: FS }); } catch { ctx = new AC(); }
     }
@@ -1033,13 +1041,38 @@ const SING = (() => {
     setStatus(`${c} 個の音符に歌詞を入れました` + (c < mora.length ? `（音符が足りず ${mora.length - c} 文字あまりました）` : ''));
   }
 
-  // ---- UST ----
+  // ---- 読み込み（UST / USTX / MIDI） ----
+  // 外部ファイルの歌詞 → このページの歌詞（ひらがな1音）。「a か」「- か」は仮名だけ、「+」「+~」「-」は伸ばし
+  const importLyric = raw => {
+    const v = String(raw ?? '').trim();
+    if (!v || /^[rR]$/.test(v)) return null;
+    if (/^[+\-~]+$/.test(v) || v === 'ー') return 'ー';
+    return lyricFromUst(v) || 'ら';
+  };
+  function applyImport(notes, tempo, name) {
+    notes = notes.filter(n => n.len > 0).map(n => ({ ...n, t: Math.round(n.t), len: Math.round(n.len), midi: Math.max(BOTTOM, Math.min(TOP, n.midi)) }))
+      .sort((a, b) => a.t - b.t || b.midi - a.midi)
+      .filter((n, i, arr) => i === 0 || n.t !== arr[i - 1].t);      // 和音は一番高い音だけ
+    if (!notes.length) { setStatus(`${name} に音符が見つかりませんでした`, true); return; }
+    stop(); st = { ...st, tempo: Math.round(tempo * 100) / 100, notes }; sel = -1; save();
+    el.tempo.value = st.tempo; lastTotal = 0; layoutIfGrown(); paint(); el.roll.scrollLeft = 0; scrollToNote(sorted()[0]);
+    setStatus(`${name} を読み込みました（${notes.length} 音符 / テンポ ${st.tempo}）`);
+  }
+  async function readFile(file) {
+    try {
+      const ext = file.name.toLowerCase().split('.').pop();
+      if (ext === 'ust') return readUst(file);
+      if (ext === 'ustx') return await readUstx(file);
+      if (ext === 'mid' || ext === 'midi') return readMidi(file);
+      setStatus('UST・USTX・MIDI（.mid）のファイルを選んでください', true);
+    } catch (e) { console.error(e); setStatus(`${file.name} を読み込めませんでした（${e.message}）`, true); }
+  }
   async function readUst(file) {
     const buf = await file.arrayBuffer();
     let text; try { text = new TextDecoder('shift_jis').decode(buf); } catch { text = new TextDecoder().decode(buf); }
     if (/charset=UTF-8/i.test(text)) text = new TextDecoder().decode(buf);
     let tempo = 120, section = null, cur = null, t = 0; const notes = [];
-    const flush = () => { if (!cur) return; const ly = lyricFromUst(cur.ly || ''); if (ly && !/^[rR]$/.test(ly)) notes.push({ t, len: cur.len, midi: Math.max(BOTTOM, Math.min(TOP, cur.midi)), ly }); t += cur.len; cur = null; };
+    const flush = () => { if (!cur) return; const ly = importLyric(cur.ly); if (ly) notes.push({ t, len: cur.len, midi: cur.midi, ly }); t += cur.len; cur = null; };
     for (const raw of text.split(/\r?\n/)) {
       const line = raw.trim(); const h = /^\[#(.+)\]$/.exec(line);
       if (h) { flush(); section = h[1]; if (/^\d+$/.test(section)) cur = { len: 480, midi: 60, ly: '' }; continue; }
@@ -1049,10 +1082,66 @@ const SING = (() => {
       else if (cur) { if (k === 'Length') cur.len = parseInt(v, 10) || 0; else if (k === 'Lyric') cur.ly = v; else if (k === 'NoteNum') cur.midi = parseInt(v, 10) || 60; else if (k === 'Tempo' && !notes.length) tempo = parseFloat(v) || tempo; }
     }
     flush();
-    if (!notes.length) { setStatus('USTに音符が見つかりませんでした', true); return; }
-    stop(); st = { ...st, tempo: Math.round(tempo * 100) / 100, notes }; sel = -1; save();
-    el.tempo.value = st.tempo; lastTotal = 0; layoutIfGrown(); paint(); el.roll.scrollLeft = 0; scrollToNote(sorted()[0]);
-    setStatus(`${file.name} を読み込みました（${notes.length} 音符 / テンポ ${st.tempo}）`);
+    applyImport(notes, tempo, file.name);
+  }
+  // USTX（OpenUtau）は YAML なので js-yaml を読み込んで解析する
+  function loadYaml() {
+    if (window.jsyaml) return Promise.resolve(window.jsyaml);
+    return new Promise((ok, ng) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js'; sc.onload = () => ok(window.jsyaml); sc.onerror = () => ng(new Error('YAMLライブラリを読み込めませんでした')); document.head.appendChild(sc); });
+  }
+  async function readUstx(file) {
+    const y = await loadYaml(); const doc = y.load(await file.text()) || {};
+    const scale = TPQ / (doc.resolution || 480);
+    const tempo = (doc.tempos && doc.tempos[0] && doc.tempos[0].bpm) || doc.bpm || 120;
+    const parts = doc.voice_parts || []; if (!parts.length) throw new Error('voice_parts がありません');
+    const track = parts[0].track_no || 0; const notes = [];
+    for (const p of parts.filter(p => (p.track_no || 0) === track)) for (const n of p.notes || []) {
+      const ly = importLyric(n.lyric); if (ly) notes.push({ t: ((p.position || 0) + (n.position || 0)) * scale, len: (n.duration || 0) * scale, midi: n.tone ?? 60, ly });
+    }
+    applyImport(notes, tempo, file.name);
+  }
+  // 標準MIDI（SMF）：音符がいちばん多いトラックを使う。歌詞イベント（FF 05）があれば同じ位置の音符に付ける
+  async function readMidi(file) {
+    const u8 = new Uint8Array(await file.arrayBuffer()); const dv = new DataView(u8.buffer);
+    const str = (o, n) => String.fromCharCode(...u8.subarray(o, o + n));
+    if (str(0, 4) !== 'MThd') throw new Error('MIDIファイルではありません');
+    const ntr = dv.getUint16(10), div = dv.getUint16(12);
+    if (div & 0x8000) throw new Error('SMPTE形式のMIDIには対応していません');
+    const scale = TPQ / div; let tempo = null; const tracks = []; let o = 8 + dv.getUint32(4);
+    const decodeText = b => { try { return new TextDecoder('utf-8', { fatal: true }).decode(b); } catch { try { return new TextDecoder('shift_jis').decode(b); } catch { return ''; } } };
+    for (let k = 0; k < ntr && o < u8.length; k++) {
+      if (str(o, 4) !== 'MTrk') break;
+      const end = o + 8 + dv.getUint32(o + 4); let p = o + 8, t = 0, run = 0; const open = new Map(), notes = [], lyrics = [];
+      const vlq = () => { let v = 0, c; do { c = u8[p++]; v = (v << 7) | (c & 0x7f); } while (c & 0x80 && p < end); return v; };
+      while (p < end) {
+        t += vlq(); let st0 = u8[p];
+        if (st0 === 0xff) { const type = u8[p + 1]; p += 2; const len = vlq(); const data = u8.subarray(p, p + len); p += len;
+          if (type === 0x51 && tempo == null) tempo = 60e6 / ((data[0] << 16) | (data[1] << 8) | data[2]);
+          if (type === 0x05 || (type === 0x01 && /[ぁ-んァ-ヶ]/.test(decodeText(data)))) lyrics.push({ t, text: decodeText(data) });
+          continue; }
+        if (st0 === 0xf0 || st0 === 0xf7) { p++; p += vlq(); continue; }
+        if (st0 & 0x80) { run = st0; p++; } else st0 = run;
+        const hi = st0 & 0xf0, d1 = u8[p], d2 = u8[p + 1];
+        p += (hi === 0xc0 || hi === 0xd0) ? 1 : 2;
+        if (hi === 0x90 && d2 > 0) { if (open.has(d1)) { const n = open.get(d1); n.len = t - n.t; } const n = { t, midi: d1, len: 0 }; open.set(d1, n); notes.push(n); }
+        else if (hi === 0x80 || (hi === 0x90 && d2 === 0)) { const n = open.get(d1); if (n) { n.len = t - n.t; open.delete(d1); } }
+      }
+      tracks.push({ notes, lyrics }); o = end;
+    }
+    const tr = tracks.slice().sort((a, b) => b.notes.length - a.notes.length)[0];
+    if (!tr || !tr.notes.length) throw new Error('音符がありません');
+    const lyr = tracks.find(x => x.lyrics.length && x === tr) || tracks.find(x => x.lyrics.length);
+    const byTick = new Map((lyr ? lyr.lyrics : []).map(l => [l.t, l.text]));
+    const notes = tr.notes.map(n => {
+      let text = byTick.get(n.t); if (text == null) for (let d = 1; d <= 10 && text == null; d++) text = byTick.get(n.t - d) ?? byTick.get(n.t + d);
+      return { t: n.t * scale, len: n.len * scale, midi: n.midi, ly: text == null ? 'ら' : importLyric(text) };
+    }).filter(n => n.ly);
+    applyImport(notes, tempo || 120, file.name);
+  }
+
+  // ---- 保存（UST / USTX / MIDI / WAV） ----
+  async function sjis(text) {
+    try { if (!koe) koe = await import(KOE_BASE + 'index.js'); return koe.encodeShiftJis(text); } catch { return null; }
   }
   async function writeUst() {
     const ord = sorted(); const lines = ['[#VERSION]', 'UST Version1.2', '[#SETTING]', `Tempo=${st.tempo}`, 'Tracks=1', 'ProjectName=砂上天獄', 'Mode2=True'];
@@ -1060,10 +1149,39 @@ const SING = (() => {
     const { label } = vcv();
     for (const n of ord) { if (n.t > t) push(n.t - t, 'R', 60); const len = Math.max(1, n.len); push(len, label.get(n.i), n.midi); t = n.t + len; }
     lines.push('[#TRACKEND]', '');
-    let bytes;
-    try { if (!koe) koe = await import(KOE_BASE + 'index.js'); bytes = koe.encodeShiftJis(lines.join('\r\n')); }
-    catch { bytes = new TextEncoder().encode(lines.join('\r\n').replace('UST Version1.2', 'UST Version1.2\r\nCharset=UTF-8')); }
+    const bytes = await sjis(lines.join('\r\n')) || new TextEncoder().encode(lines.join('\r\n').replace('UST Version1.2', 'UST Version1.2\r\nCharset=UTF-8'));
     download(new Blob([bytes], { type: 'application/octet-stream' }), 'tototo.ust');
+  }
+  function writeUstx() {
+    const ord = sorted(), { label } = vcv(); const q = v => JSON.stringify(String(v));
+    const end = ord.reduce((m, n) => Math.max(m, n.t + n.len), 0);
+    const L = ['name: ' + q('砂上天獄'), "comment: ''", 'output_dir: Vocal', 'cache_dir: UCache', 'ustx_version: 0.6', `resolution: ${TPQ}`, `bpm: ${st.tempo}`, 'beat_per_bar: 4', 'beat_unit: 4',
+      'tempos:', '- position: 0', `  bpm: ${st.tempo}`, 'time_signatures:', '- bar_position: 0', '  beat_per_bar: 4', '  beat_unit: 4',
+      'tracks:', '- phonemizer: OpenUtau.Core.DefaultPhonemizer', '  track_name: ' + q('注寝ととと'), '  mute: false', '  solo: false', '  volume: 0',
+      'voice_parts:', `- duration: ${end + TPQ * 4}`, '  name: ' + q('注寝ととと'), "  comment: ''", '  track_no: 0', '  position: 0', '  notes:'];
+    for (const n of ord) L.push(`  - position: ${n.t}`, `    duration: ${n.len}`, `    tone: ${n.midi}`, `    lyric: ${q(label.get(n.i))}`,
+      '    pitch:', '      data:', '      - {x: -25, y: 0, shape: io}', '      - {x: 25, y: 0, shape: io}', '      snap_first: true',
+      '    vibrato: {length: 0, period: 175, depth: 25, in: 10, out: 10, shift: 0, drift: 0, vol_link: 0}',
+      '    note_expressions: []', '    phoneme_expressions: []', '    phoneme_overrides: []');
+    L.push('wave_parts: []', '');
+    download(new Blob([L.join('\n')], { type: 'text/yaml' }), 'tototo.ustx');
+  }
+  async function writeMidi() {
+    const ord = sorted(), { label } = vcv(); const ev = [];
+    const vlq = v => { const b = [v & 0x7f]; while ((v >>= 7)) b.unshift((v & 0x7f) | 0x80); return b; };
+    const meta = (type, bytes) => [0xff, type, ...vlq(bytes.length), ...bytes];
+    const name = await sjis('注寝ととと') || new TextEncoder().encode('tototo');
+    const us = Math.round(60e6 / st.tempo);
+    ev.push({ t: 0, o: 0, b: meta(0x03, [...name]) }, { t: 0, o: 0, b: meta(0x51, [us >> 16 & 255, us >> 8 & 255, us & 255]) }, { t: 0, o: 0, b: meta(0x58, [4, 2, 24, 8]) });
+    for (const n of ord) {
+      const ly = await sjis(label.get(n.i)) || new TextEncoder().encode(label.get(n.i));
+      ev.push({ t: n.t, o: 1, b: meta(0x05, [...ly]) }, { t: n.t, o: 2, b: [0x90, n.midi, 100] }, { t: n.t + n.len, o: 0, b: [0x80, n.midi, 0] });
+    }
+    ev.sort((a, b) => a.t - b.t || a.o - b.o);
+    const body = []; let last = 0; for (const e of ev) { body.push(...vlq(e.t - last), ...e.b); last = e.t; } body.push(0, 0xff, 0x2f, 0);
+    const u32 = v => [v >>> 24 & 255, v >>> 16 & 255, v >>> 8 & 255, v & 255];
+    const bytes = new Uint8Array([0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, TPQ >> 8, TPQ & 255, 0x4d, 0x54, 0x72, 0x6b, ...u32(body.length), ...body]);
+    download(new Blob([bytes], { type: 'audio/midi' }), 'tototo.mid');
   }
   function writeWav() {
     if (!lastMix) return; const n = lastMix.length; const b = new DataView(new ArrayBuffer(44 + n * 2));
@@ -1119,8 +1237,10 @@ const SING = (() => {
         <label for="sgBreath">息っぽさ</label><input type="range" id="sgBreath" min="0" max="1" step="0.05"><output id="sgBreathV"></output>
       </div>
       <div class="sg-files">
-        <label class="sg-btn" for="sgUst" style="display:inline-flex;align-items:center">USTを読み込む</label><input type="file" id="sgUst" accept=".ust">
+        <label class="sg-btn" for="sgUst" style="display:inline-flex;align-items:center">読み込む（UST・USTX・MIDI）</label><input type="file" id="sgUst" accept=".ust,.ustx,.mid,.midi">
         <button class="sg-btn" id="sgUstSave">USTで保存</button>
+        <button class="sg-btn" id="sgUstxSave">USTXで保存</button>
+        <button class="sg-btn" id="sgMidiSave">MIDIで保存</button>
         <button class="sg-btn" id="sgWav" disabled>WAVで保存</button>
         <span class="sg-files"><select id="sgSample" aria-label="サンプル曲" style="font:inherit;font-size:16px;min-height:42px;border:1px solid var(--btn);background:var(--white);color:var(--ink)">${Object.entries(SAMPLES).map(([k, v]) => `<option value="${k}">${v.title}</option>`).join('')}</select><button class="sg-btn" id="sgReset">サンプル曲を読み込む</button></span>
         <button class="sg-btn" id="sgClear">全部消す</button>
@@ -1154,8 +1274,10 @@ const SING = (() => {
       const r = $(id), o = $(id + 'V'); r.value = st[key]; o.textContent = (+st[key]).toFixed(2);
       r.addEventListener('input', () => { st[key] = +r.value; o.textContent = (+r.value).toFixed(2); save(); });
     }
-    $('sgUst').addEventListener('change', e => { const f = e.target.files[0]; if (f) readUst(f); e.target.value = ''; });
+    $('sgUst').addEventListener('change', e => { const f = e.target.files[0]; if (f) readFile(f); e.target.value = ''; });
     $('sgUstSave').addEventListener('click', writeUst);
+    $('sgUstxSave').addEventListener('click', writeUstx);
+    $('sgMidiSave').addEventListener('click', writeMidi);
     el.wav.addEventListener('click', writeWav);
     $('sgReset').addEventListener('click', () => {
       const k = $('sgSample').value;
