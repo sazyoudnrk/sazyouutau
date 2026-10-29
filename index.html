@@ -614,7 +614,15 @@ const SING = (() => {
   let el = {};
 
   function load() {
-    try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s && Array.isArray(s.notes)) return { ...sampleState(DEFAULT_SAMPLE), ...s }; } catch {}
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (s && Array.isArray(s.notes)) {
+        // 前のサンプル曲（さくらさくら・きらきら星）が、手を加えずにそのまま保存されているだけなら、新しいサンプルに置き換える
+        const n0 = s.notes[0] || {};
+        if ((s.tempo === 72 && s.notes.length === 50 && n0.ly === 'さ') || (s.tempo === 104 && s.notes.length === 42 && n0.ly === 'お')) return sampleState(DEFAULT_SAMPLE);
+        return { ...sampleState(DEFAULT_SAMPLE), ...s };
+      }
+    } catch {}
     return sampleState(DEFAULT_SAMPLE);
   }
   function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(st)); } catch {} }
