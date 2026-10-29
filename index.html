@@ -653,14 +653,36 @@ const SING = (() => {
       setStatus('声を読み込み中…');
       try { koe = await import(KOE_BASE + 'index.js'); }
       catch (e) { voiceErr = '歌声エンジンを読み込めませんでした。通信状況を確認して、ページを開き直してください。'; throw e; }
-      try { bank = await koe.VoiceBank.load(new URL(VOICE_URL, location.href).href); }
-      catch (e) { voiceErr = '注寝とととの声のデータ（voice/tototo.koe）がまだ置かれていません。音符の編集はできますが、歌わせるのはデータが置かれてからになります。'; throw e; }
+      const url = new URL(VOICE_URL, location.href).href;
+      try { bank = await koe.VoiceBank.load(url); }
+      catch (e) {
+        // 部分読み込み（Range）に応じないサーバーでは、ファイル全体を読み込んでから使う
+        console.warn('Range読み込みに失敗、全体を読み込みます:', e);
+        try { bank = await koe.VoiceBank.load(await fetchWhole(url)); }
+        catch (e2) { voiceErr = `注寝とととの声のデータ（voice/tototo.koe）を読み込めませんでした（${e2.message || e2}）。音符の編集はできます。`; throw e2; }
+      }
       try { wl = await koe.Worldline.load({ scriptUrl: KOE_BASE + 'world/worldline.js' }); }
       catch (e) { voiceErr = '合成エンジン（worldline）を読み込めませんでした。'; throw e; }
       setStatus(`準備できました（${Object.keys(bank.manifest.phonemes).length}音素）。▶ 歌う を押してください。`);
       paint();
     })().catch(e => { console.error(e); setStatus(voiceErr || String(e), true); refreshButtons(); });
     return loading;
+  }
+
+  async function fetchWhole(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const total = +res.headers.get('Content-Length') || 0;
+    if (!res.body || !total) return await res.blob();
+    const reader = res.body.getReader(), chunks = []; let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break;
+      chunks.push(value); got += value.length;
+      setStatus(`声のデータを読み込み中… ${Math.round(got / total * 100)}%（初回のみ・約${Math.round(total / 1e6)}MB）`);
+      if (el.prog) el.prog.style.width = (got / total * 100).toFixed(1) + '%';
+    }
+    if (el.prog) el.prog.style.width = '0';
+    return new Blob(chunks);
   }
 
   // 歌詞＋直前の母音＋音程 → 音源のエイリアス
@@ -777,7 +799,12 @@ const SING = (() => {
   // ---- 再生 ----
   let srcs = [];
   function getCtx() {
-    if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; ctx = new AC({ sampleRate: FS }); }
+    if (!ctx) {
+      // iPhoneはマナーモードだとWeb Audioが無音になる。「再生」扱いにすればスイッチに関係なく鳴る（iOS 16.4+）
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
+      const AC = window.AudioContext || window.webkitAudioContext;
+      try { ctx = new AC({ sampleRate: FS }); } catch { ctx = new AC(); }
+    }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
