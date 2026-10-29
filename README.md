@@ -44,7 +44,8 @@ audio/
   - 音源を更新したら、koe の [DEMO](https://onjmin.github.io/koe/demo) の「変換」で新しい zip から `.koe` を作り、同じ名前で置き換える
 - ライブラリ本体と worldline は jsDelivr の `@onjmin/koe@1.0.11` から読み込む
 - 作った曲は見た人のブラウザ（localStorage）に保存される。UST の読み込み・保存、WAV 保存あり
-- サンプル曲はきらきら星のメロディに書き下ろしの歌詞（`index.html` の `SAMPLE`）
+- サンプル曲は「さくらさくら」（日本古謡・1888年箏曲集の歌詞）と「きらきら星」（書き下ろし歌詞）。`index.html` の `SAMPLES`
+- 歌詞はひらがなで持ち、表示・UST保存では前の音符とのつながりから連続音のエイリアス（`- さ` `a く` …）にする
 
 ## ページ
 

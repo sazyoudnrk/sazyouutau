@@ -664,7 +664,7 @@ const SING = (() => {
   }
 
   // 歌詞＋直前の母音＋音程 → 音源のエイリアス
-  const nextPv = (ly, pv) => ly === 'ー' ? pv : vowelOf(ly);
+  const nextPv = (ly, p) => ly === 'ー' ? (p === '-' ? 'a' : p) : vowelOf(ly);
   function resolve(ly, pv, midi) {
     if (!bank) return null;
     if (ly === 'ー') ly = VOWEL_KANA[pv] || 'あ';
@@ -710,7 +710,7 @@ const SING = (() => {
       const chained = n.t === prevEnd && pv !== '-';
       n.alias = resolve(n.ly, chained ? pv : '-', n.midi);
       n.chained = chained;
-      pv = n.alias ? nextPv(n.ly, pv) : '-';
+      pv = n.alias ? nextPv(n.ly, chained ? pv : '-') : '-';
       prevEnd = n.t + n.len;
     }
     const uniq = [...new Set(ns.map(n => n.alias).filter(Boolean))];
@@ -852,15 +852,28 @@ const SING = (() => {
     const out = []; for (let r = 0; r < 12; r++) { const m = TOP - r; const c = BLACK.has(m % 12) ? '#ecebec' : '#fbfbfb'; out.push(`${c} ${r * 22}px ${(r + 1) * 22 - 1}px, #e3e1e2 ${(r + 1) * 22 - 1}px ${(r + 1) * 22}px`); }
     return out.join(',');
   }
+  // 各音符の連続音エイリアス（「- さ」「a く」…）。前の音符と隙間なくつながっていれば前の母音、休符のあとは「-」
+  function vcv() {
+    const ord = sorted(), label = new Map(), miss = new Set(); let pv = '-', prevEnd = -1;
+    for (const n of ord) {
+      const p = n.t === prevEnd ? pv : '-';
+      const kana = n.ly === 'ー' ? (VOWEL_KANA[p] || 'あ') : n.ly;
+      const a = bank ? resolve(n.ly, p, n.midi) : null;
+      if (bank && !a) miss.add(n.i);
+      label.set(n.i, a || `${p} ${kana}`);
+      pv = (!bank || a) ? nextPv(n.ly, p) : '-';
+      prevEnd = n.t + n.len;
+    }
+    return { label, miss };
+  }
   function paint() {
-    const ord = sorted(); let pv = '-', prevEnd = -1; const miss = new Set();
-    if (bank) for (const n of ord) { const a = resolve(n.ly, n.t === prevEnd ? pv : '-', n.midi); if (!a) miss.add(n.i); pv = a ? nextPv(n.ly, pv) : '-'; prevEnd = n.t + n.len; }
+    const { label, miss } = vcv();
     el.grid.querySelectorAll('.note').forEach(x => x.remove());
     const frag = document.createDocumentFragment();
     st.notes.forEach((n, i) => {
       const d = document.createElement('div');
       d.className = 'note' + (i === sel ? ' sel' : '') + (miss.has(i) ? ' miss' : '');
-      d.dataset.i = i; d.textContent = n.ly;
+      d.dataset.i = i; d.textContent = label.get(i);
       d.style.left = n.t * ppt + 'px'; d.style.top = (TOP - n.midi) * 22 + 'px'; d.style.width = Math.max(10, n.len * ppt) + 'px';
       frag.appendChild(d);
     });
@@ -871,16 +884,22 @@ const SING = (() => {
     const n = st.notes[sel];
     if (!n) { el.panel.innerHTML = `<span class="empty">音符をタップすると、ここで歌詞・音程・長さを変えられます。</span>`; return; }
     el.panel.innerHTML = `
-      <label class="grp"><span class="lbl">歌詞</span><input type="text" id="sgLyric" value="${n.ly}" maxlength="6" enterkeyhint="next" autocomplete="off"></label>
+      <label class="grp"><span class="lbl">歌詞</span><input type="text" id="sgLyric" value="${n.ly}" maxlength="8" enterkeyhint="next" autocomplete="off"></label>
+      <span class="grp"><span class="lbl">連続音</span><span class="val" id="sgAlias" style="min-width:4.5em">${vcv().label.get(sel)}</span></span>
       <span class="grp"><span class="lbl">音程</span><button class="sg-btn" data-act="down" aria-label="半音下げる">▼</button><span class="val">${midiName(n.midi)}</span><button class="sg-btn" data-act="up" aria-label="半音上げる">▲</button></span>
       <span class="grp"><span class="lbl">長さ</span><button class="sg-btn" data-act="shorter" aria-label="短くする">−</button><span class="val">${lenName(n.len)}</span><button class="sg-btn" data-act="longer" aria-label="長くする">＋</button></span>
       <span class="grp"><span class="lbl">位置</span><button class="sg-btn" data-act="left" aria-label="前へ">◀</button><button class="sg-btn" data-act="right" aria-label="後ろへ">▶</button></span>
       <span class="grp"><button class="sg-btn" data-act="hear">♪ この音</button><button class="sg-btn" data-act="from">ここから歌う</button><button class="sg-btn" data-act="del">消す</button></span>`;
     const inp = el.panel.querySelector('#sgLyric');
-    inp.addEventListener('input', () => { const v = toHira(inp.value.trim()); if (v) { st.notes[sel].ly = v; save(); paintNoteText(); } });
+    inp.addEventListener('input', () => { const v = lyricFromUst(inp.value); if (v) { st.notes[sel].ly = v; save(); paintNoteText(); } });
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); selectNext(1, true); } });
   }
-  function paintNoteText() { const d = el.grid.querySelector(`.note[data-i="${sel}"]`); if (d) d.textContent = st.notes[sel].ly; }
+  // 歌詞の入力中：自分と後ろの音符の連続音表示を更新（入力欄のフォーカスは保つ）
+  function paintNoteText() {
+    const { label, miss } = vcv();
+    el.grid.querySelectorAll('.note').forEach(d => { const i = +d.dataset.i; d.textContent = label.get(i); d.classList.toggle('miss', miss.has(i)); });
+    const a = document.getElementById('sgAlias'); if (a) a.textContent = label.get(sel);
+  }
   const lenName = l => ({ 120: '1/16', 240: '1/8', 360: '付点1/8', 480: '1/4', 720: '付点1/4', 960: '1/2', 1440: '付点1/2', 1920: '1' }[l] || (l / TPQ).toFixed(2) + '拍');
   function selectNext(dir, focus) {
     const ord = sorted(); const k = ord.findIndex(n => n.i === sel); const nx = ord[k + dir];
@@ -1011,7 +1030,8 @@ const SING = (() => {
   async function writeUst() {
     const ord = sorted(); const lines = ['[#VERSION]', 'UST Version1.2', '[#SETTING]', `Tempo=${st.tempo}`, 'Tracks=1', 'ProjectName=砂上天獄', 'Mode2=True'];
     let t = 0, idx = 0; const push = (len, ly, midi) => lines.push(`[#${String(idx++).padStart(4, '0')}]`, `Length=${len}`, `Lyric=${ly}`, `NoteNum=${midi}`, 'PreUtterance=', 'Intensity=100', 'Modulation=0');
-    for (const n of ord) { if (n.t > t) push(n.t - t, 'R', 60); const len = Math.max(1, n.len); push(len, n.ly, n.midi); t = n.t + len; }
+    const { label } = vcv();
+    for (const n of ord) { if (n.t > t) push(n.t - t, 'R', 60); const len = Math.max(1, n.len); push(len, label.get(n.i), n.midi); t = n.t + len; }
     lines.push('[#TRACKEND]', '');
     let bytes;
     try { if (!koe) koe = await import(KOE_BASE + 'index.js'); bytes = koe.encodeShiftJis(lines.join('\r\n')); }
@@ -1036,7 +1056,7 @@ const SING = (() => {
   <h1 class="ttl">歌わせてみる</h1>
   <div class="sg-intro">
     <p>注寝とととに、好きなメロディを歌わせられます。</p>
-    <p>「書く」で空いているところをタップすると音符が置けます。音符はドラッグで移動、右端のドラッグで長さを変えられます。歌詞は下の欄で変えられます。</p>
+    <p>「書く」で空いているところをタップすると音符が置けます。音符はドラッグで移動、右端のドラッグで長さを変えられます。歌詞はひらがなで入れると、前の音とのつながりから連続音（「a か」など）に自動でなります。</p>
   </div>
   <div class="sg-status" id="sgStatus" role="status">読み込み中…</div>
   <div class="sg-prog"><i id="sgProg"></i></div>
