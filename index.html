@@ -169,6 +169,61 @@ hr{border:0;border-top:2px solid var(--rule);margin:0}
 .lb button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));
   background:none;border:0;color:#fff;font-size:34px;cursor:pointer;line-height:1}
 
+/* ===== 歌わせてみる ===== */
+.sg-intro{display:flex;flex-direction:column;gap:4px}
+.sg-status{font-size:14px;color:var(--ink);background:var(--white);padding:10px 14px;border-left:4px solid var(--title)}
+.sg-status.err{border-color:var(--red)}
+.sg-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.sg-btn{border:0;background:var(--btn);color:var(--ink);font:inherit;font-weight:400;font-size:15px;min-height:42px;padding:6px 14px;cursor:pointer;letter-spacing:.04em}
+.sg-btn:hover{background:var(--btn-hover)}
+.sg-btn:disabled{opacity:.45;cursor:default}
+.sg-btn.main{background:var(--title);color:var(--ink);font-weight:700;min-width:104px}
+.sg-btn.main:hover{background:#e7a321}
+.sg-seg{display:inline-flex}
+.sg-seg .sg-btn{min-width:46px}
+.sg-seg .sg-btn[aria-pressed="true"]{background:var(--ink);color:var(--white)}
+.sg-bar label{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ink)}
+.sg-bar input[type=number],.sg-bar select,.sg-panel input[type=text]{font:inherit;font-size:16px;color:var(--ink);background:var(--white);border:1px solid var(--btn);min-height:42px;padding:4px 8px}
+.sg-bar input[type=number]{width:72px}
+.sg-prog{height:4px;background:var(--btn);overflow:hidden}
+.sg-prog>i{display:block;height:100%;width:0;background:var(--title);transition:width .1s}
+
+.roll{--rowH:22px;--keyW:46px;--rulerH:22px;position:relative;overflow:auto;height:min(62vh,560px);background:var(--white);border:1px solid var(--btn);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.roll-inner{position:relative}
+.ruler{position:sticky;top:0;z-index:4;display:flex;height:var(--rulerH);background:var(--bg);border-bottom:1px solid var(--btn)}
+.ruler .corner{position:sticky;left:0;z-index:5;flex:none;width:var(--keyW);background:var(--bg)}
+.ruler .ticks{position:relative;flex:none}
+.ruler .ticks span{position:absolute;top:2px;font-size:11px;color:var(--text);padding-left:4px;border-left:1px solid var(--rule);line-height:18px;font-variant-numeric:tabular-nums}
+.roll-body{display:flex;position:relative}
+.keys{position:sticky;left:0;z-index:3;flex:none;width:var(--keyW);background:var(--white);border-right:1px solid var(--btn)}
+.keys div{height:var(--rowH);box-sizing:border-box;border-bottom:1px solid #ebe9ea;font-size:10px;line-height:var(--rowH);padding-left:4px;color:var(--text);cursor:pointer;user-select:none;-webkit-user-select:none}
+.keys div.b{background:#3a3a3a;color:#bbb;margin-right:14px}
+.keys div.c{color:var(--ink);font-weight:700}
+.grid{position:relative;flex:none;touch-action:pan-x pan-y}
+.note{position:absolute;box-sizing:border-box;height:calc(var(--rowH) - 2px);margin-top:1px;background:var(--band);border:1px solid #d7a12c;color:var(--ink);font-size:12px;line-height:calc(var(--rowH) - 4px);padding:0 10px 0 4px;overflow:hidden;white-space:nowrap;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.note::after{content:"";position:absolute;right:0;top:0;bottom:0;width:8px;background:rgba(0,0,0,.08);cursor:ew-resize}
+.note.sel{background:var(--title);border:2px solid var(--ink);z-index:2}
+.note.miss{background:repeating-linear-gradient(45deg,var(--band) 0 6px,#f1c2bc 6px 12px);border-color:var(--red)}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:2;pointer-events:none}
+
+.sg-panel{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--white);padding:12px;min-height:66px}
+.sg-panel .lbl{font-size:13px;color:var(--text)}
+.sg-panel .val{min-width:3.2em;text-align:center;color:var(--ink);font-variant-numeric:tabular-nums}
+.sg-panel input[type=text]{width:5.5em}
+.sg-panel .grp{display:inline-flex;align-items:center;gap:4px}
+.sg-panel .grp .sg-btn{min-width:42px;padding:6px 8px}
+.sg-panel .empty{color:var(--text);font-size:14px}
+
+.sg-more{background:var(--white);padding:12px 14px}
+.sg-more summary{cursor:pointer;color:var(--ink);font-weight:400}
+.sg-more .in{display:flex;flex-direction:column;gap:18px;padding-top:14px}
+.sg-more textarea{font:inherit;font-size:16px;width:100%;min-height:88px;border:1px solid var(--btn);padding:8px;color:var(--ink);background:var(--white)}
+.sg-sliders{display:grid;grid-template-columns:auto minmax(0,1fr) 3em;gap:8px 12px;align-items:center;font-size:14px;color:var(--ink)}
+.sg-sliders output{font-variant-numeric:tabular-nums;text-align:right}
+.sg-files{display:flex;flex-wrap:wrap;gap:10px}
+.sg-files input[type=file]{display:none}
+.sg-note{font-size:13px;line-height:1.7}
+
 footer{background:var(--btn);color:var(--ink);text-align:center;font-size:13px;padding-block:22px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -188,6 +243,7 @@ footer{background:var(--btn);color:var(--ink);text-align:center;font-size:13px;p
             <li><a href="#terms">利用規約</a></li>
             <li><a href="#tototo">注寝ととと</a></li>
             <li><a href="#ust">UST</a></li>
+            <li><a href="#sing">歌わせてみる</a></li>
           </ul>
         </li>
         <li><a href="#mycoe">MYCOE</a>
@@ -339,7 +395,8 @@ utau:{title:'UTAU', html:()=>`
     <p>試聴音源はきらきらぼしで${ext('https://bowlroll.net/file/63432','こちら')}のUSTを借りています。</p>
   </div>
   <p class="hint">画像をクリックで詳細へ</p>
-  ${vcard('tototo', IMG.tototoIcon, '注寝ととと', '最初で最後かもしれない音源です。', 'tototo_v111')}`},
+  ${vcard('tototo', IMG.tototoIcon, '注寝ととと', '最初で最後かもしれない音源です。', 'tototo_v111')}
+  <div class="btns"><a class="btn" href="#sing">ブラウザで歌わせてみる</a></div>`},
 
 mycoe:{title:'MYCOE', html:()=>`
   <div class="btns">${ext('https://coeiroink.com/terms','利用規約','btn')}</div>
@@ -413,6 +470,7 @@ tototo:{title:'注寝ととと', html:()=>`
         <p>音階はF4、連続音の音源です。<br>原音調整済ですが、不備があるかもしれません。</p>
       </div>
       ${listen('tototo_v111')}
+      <div class="btns"><a class="btn" href="#sing">ブラウザで歌わせてみる</a></div>
       <div class="box">${prof([['名前','注寝ととと'],['読み方','そそぐねととと'],null,
         ['性格','おだやか'],['身長','160cm'],['年齢','17歳'],['誕生日(作成日)','21/3/10'],['体重','不明(90MB前後)'],null,
         ['好き','お茶を淹れること、楽しげなもの'],['苦手','変化']])}</div>
@@ -486,10 +544,545 @@ works:{title:'作品', html:()=>`
   <p class="cap">作っていただいたカバーのリンクをひっそりと置くところ<br>（怒られたら消します）</p>
   ${FAN_COVERS.length?`<ul>${FAN_COVERS.map(c=>`<li>${ext(c.url,c.title)}</li>`).join('')}</ul>`:''}`},
 
+sing:{title:'歌わせてみる', html:()=>SING.html(), mount:()=>SING.mount(), unmount:()=>SING.unmount()},
+
 gallery:{title:'絵', html:()=>`
   <p class="cap">絵を置いている</p>
   <div class="gallery">${GALLERY.map((g,i)=>{const o=typeof g==='string'?{src:g,fb:''}:g;return `<button aria-label="絵 ${i+1} を拡大"><img ${pic(o)} alt="" loading="lazy"></button>`}).join('')}</div>`},
 };
+
+/* ======================================================
+   歌わせてみる（@onjmin/koe + worldline）
+   ====================================================== */
+const SING = (() => {
+  // ---- 設定 ----
+  const KOE_BASE = 'https://cdn.jsdelivr.net/npm/@onjmin/koe@1.0.11/dist/';
+  const VOICE_URL = 'voice/tototo.koe';
+  const STORE_KEY = 'sazyouutau-sing-v1';
+  const TPQ = 480;                 // 4分音符あたりのtick（UST準拠）
+  const FS = 48000;
+  const TOP = 84, BOTTOM = 48;     // C6〜C3
+  const ROWS = TOP - BOTTOM + 1;
+  const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const BLACK = new Set([1,3,6,8,10]);
+  const midiName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+  const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  // ---- かな ----
+  const SMALL = 'ぁぃぅぇぉゃゅょゎ';
+  const VOWEL = {};
+  for (const [v, cs] of Object.entries({
+    a: 'あぁかがさざただなはばぱまやゃらわ', i: 'いぃきぎしじちぢにひびぴみり', u: 'うぅくぐすずつづぬふぶぷむゆゅるゔ',
+    e: 'えぇけげせぜてでねへべぺめれ', o: 'おぉこごそぞとどのほぼぽもよょろを', n: 'ん' })) for (const c of cs) VOWEL[c] = v;
+  const VOWEL_KANA = { a: 'あ', i: 'い', u: 'う', e: 'え', o: 'お', n: 'ん' };
+  const toHira = s => s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+  const vowelOf = ly => { for (let i = ly.length - 1; i >= 0; i--) if (VOWEL[ly[i]]) return VOWEL[ly[i]]; return '-'; };
+  function splitMora(text) {
+    const out = [];
+    for (const ch of toHira(text)) {
+      if (/[\sぁ-んー]/.test(ch) === false) continue;
+      if (/\s/.test(ch)) continue;
+      if (SMALL.includes(ch) && out.length) { out[out.length - 1] += ch; continue; }
+      if (ch === 'ー') { out.push(VOWEL_KANA[vowelOf(out[out.length - 1] || 'あ')] || 'あ'); continue; }
+      out.push(ch);
+    }
+    return out;
+  }
+  // USTの歌詞（"a か" や "- か" 形式も）から仮名部分だけを取り出す
+  const lyricFromUst = s => { s = s.trim(); const sp = s.lastIndexOf(' '); return toHira(sp >= 0 ? s.slice(sp + 1) : s); };
+
+  // ---- サンプル曲（メロディはきらきら星／歌詞は書き下ろし） ----
+  const SAMPLE = (() => {
+    const A = [65,65,72,72,74,74,72], B = [70,70,69,69,67,67,65], C = [72,72,70,70,69,69,67];
+    const lines = [[A,'おちゃをいれよう'],[B,'ゆげがのぼるよ'],[C,'まどをあけたら'],[C,'そらがひかるよ'],[A,'おちゃをいれよう'],[B,'ふたりでのもう']];
+    const notes = []; let t = 0;
+    for (const [mel, ly] of lines) {
+      const mora = splitMora(ly);
+      mel.forEach((m, i) => { const len = i === 6 ? 720 : 480; notes.push({ t, len, midi: m, ly: mora[i] }); t += i === 6 ? 960 : 480; });
+    }
+    return { tempo: 104, notes, gender: 0.5, tension: 0.5, breath: 0.5 };
+  })();
+
+  // ---- 状態 ----
+  let st = load();
+  let sel = -1, mode = 'write', snap = 240, ppt = 0.15;
+  let koe = null, bank = null, wl = null, voiceErr = '', loading = null;
+  const pcmCache = new Map(), noteCache = new Map();
+  let ctx = null, src = null, playStart = 0, raf = 0, lastMix = null, busy = false, abort = false;
+  let el = {};
+
+  function load() {
+    try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s && Array.isArray(s.notes)) return { ...SAMPLE, ...s }; } catch {}
+    return structuredClone(SAMPLE);
+  }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(st)); } catch {} }
+  const sorted = () => st.notes.map((n, i) => ({ ...n, i })).sort((a, b) => a.t - b.t || b.midi - a.midi);
+
+  // ---- 読み込み ----
+  function ensureVoice() {
+    if (loading) return loading;
+    loading = (async () => {
+      setStatus('声を読み込み中…');
+      try { koe = await import(KOE_BASE + 'index.js'); }
+      catch (e) { voiceErr = '歌声エンジンを読み込めませんでした。通信状況を確認して、ページを開き直してください。'; throw e; }
+      try { bank = await koe.VoiceBank.load(new URL(VOICE_URL, location.href).href); }
+      catch (e) { voiceErr = '注寝とととの声のデータ（voice/tototo.koe）がまだ置かれていません。音符の編集はできますが、歌わせるのはデータが置かれてからになります。'; throw e; }
+      try { wl = await koe.Worldline.load({ scriptUrl: KOE_BASE + 'world/worldline.js' }); }
+      catch (e) { voiceErr = '合成エンジン（worldline）を読み込めませんでした。'; throw e; }
+      setStatus(`準備できました（${Object.keys(bank.manifest.phonemes).length}音素）。▶ 歌う を押してください。`);
+      paint();
+    })().catch(e => { console.error(e); setStatus(voiceErr || String(e), true); refreshButtons(); });
+    return loading;
+  }
+
+  // 歌詞＋直前の母音＋音程 → 音源のエイリアス
+  function resolve(ly, pv, midi) {
+    if (!bank) return null;
+    const names = bank.manifest.phonemes;
+    const has = a => Object.hasOwn(names, a);
+    if (has(ly)) return ly;
+    const tries = [ly]; if (ly === 'を') tries.push('お'); if (ly === 'ゔ') tries.push('ぶ');
+    const suffixes = pitchSuffixes(midi);
+    for (const k of tries) for (const b of [`${pv} ${k}`, `- ${k}`, k, `* ${k}`]) {
+      for (const s of suffixes) if (has(b + s)) return b + s;
+    }
+    return null;
+  }
+  let suffixList = null;
+  function pitchSuffixes(midi) {
+    if (!suffixList) {
+      const set = new Set();
+      for (const n of Object.keys(bank.manifest.phonemes)) { const m = /_([A-G][#b]?-?\d)$/.exec(n); if (m) set.add(m[1]); }
+      suffixList = [...set].map(t => { const m = /^([A-G])([#b]?)(-?\d)$/.exec(t); let s = NAMES.indexOf(m[1]); if (m[2] === '#') s++; else if (m[2] === 'b') s--; return { t, midi: (+m[3] + 1) * 12 + s }; });
+    }
+    return [...suffixList.slice().sort((a, b) => Math.abs(a.midi - midi) - Math.abs(b.midi - midi)).map(x => '_' + x.t), ''];
+  }
+
+  async function getPcm(alias) {
+    if (!pcmCache.has(alias)) pcmCache.set(alias, bank.getPcm(alias));
+    return pcmCache.get(alias);
+  }
+
+  // ---- 合成：音符列 → 1本の波形 ----
+  // 連続音は先行発声が長いので、2音目以降は手前90msだけ残して前の音と35msクロスフェードする（koeのデモと同じ考え方）
+  async function renderMix(notes, onProgress) {
+    const LEAD0 = 0.25, LEADCAP = 90, XF = 35, MINXF = 5, TAIL = 10;
+    const msPerTick = 60000 / st.tempo / TPQ;
+    // 単音化：重なりは後ろの音符の頭で切る
+    const ns = notes.map(n => ({ ...n }));
+    for (let k = 0; k < ns.length - 1; k++) if (ns[k].t + ns[k].len > ns[k + 1].t) ns[k].len = Math.max(30, ns[k + 1].t - ns[k].t);
+
+    // 先にエイリアスを決めて、必要な音素をまとめて取得
+    let pv = '-', prevEnd = -1;
+    for (const n of ns) {
+      const chained = n.t === prevEnd && pv !== '-';
+      n.alias = resolve(n.ly, chained ? pv : '-', n.midi);
+      n.chained = chained;
+      pv = n.alias ? vowelOf(n.ly) : '-';
+      prevEnd = n.t + n.len;
+    }
+    const uniq = [...new Set(ns.map(n => n.alias).filter(Boolean))];
+    let got = 0;
+    const queue = uniq.slice();
+    await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) { await getPcm(queue.shift()); onProgress?.(++got / uniq.length * 0.3); } }));
+
+    const segs = []; let prev = null, done = 0;
+    for (const n of ns) {
+      if (abort) return null;
+      const durMs = n.len * msPerTick;
+      if (!n.alias) { if (prev) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; } prev = null; continue; }
+      const entry = bank.manifest.phonemes[n.alias];
+      const key = [n.alias, n.midi, Math.round(durMs), st.tempo, st.gender, st.tension, st.breath].join('|');
+      let audio = noteCache.get(key);
+      if (!audio) {
+        const pcm = await getPcm(n.alias);
+        audio = pcm ? wl.renderNote({ pcm, pitch: midiHz(n.midi), durationMs: durMs, tempo: st.tempo,
+          gender: st.gender, tension: st.tension, breathiness: st.breath, ...koe.leadInFromEntry(entry) }) : null;
+        if (audio) noteCache.set(key, audio);
+      }
+      onProgress?.(0.3 + ++done / ns.length * 0.7);
+      await new Promise(r => setTimeout(r, 0));
+      if (!audio || !audio.length) { if (prev) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; } prev = null; continue; }
+      const preMs = (entry.pre || 0) / FS * 1000;
+      const head = !(n.chained && prev);
+      const effPre = head ? preMs : Math.min(preMs, LEADCAP, prev.durMs);
+      const skip = Math.max(0, Math.round((preMs - effPre) / 1000 * FS));
+      const beat = Math.round((LEAD0 + n.t * msPerTick / 1000) * FS);
+      const start = Math.max(0, beat - Math.round(effPre / 1000 * FS));
+      const data = audio.subarray(Math.min(skip, audio.length));
+      const xf = head ? TAIL : Math.max(MINXF, Math.min(effPre, XF));
+      const seg = { data, start, end: start + data.length, inLen: xf, outAt: null, outLen: TAIL, durMs };
+      if (prev) { if (head) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; } else { prev.outAt = start; prev.outLen = xf; } }
+      segs.push(seg); prev = seg;
+    }
+    if (prev) { prev.outLen = TAIL; prev.outAt = prev.end - TAIL; }
+    if (!segs.length) return new Float32Array(FS);
+
+    const total = Math.max(...segs.map(s => s.outAt != null ? Math.min(s.end, s.outAt + Math.round(s.outLen / 1000 * FS)) : s.end)) + FS / 4;
+    const mix = new Float32Array(total);
+    for (const s of segs) {
+      const inN = Math.max(1, Math.round(s.inLen / 1000 * FS));
+      const outAt = s.outAt == null ? s.end : s.outAt, outN = Math.max(1, Math.round(s.outLen / 1000 * FS));
+      const stop = Math.min(s.end, outAt + outN);
+      for (let p = s.start; p < stop; p++) {
+        const k = p - s.start; let g = 1;
+        if (k < inN) g *= Math.sin(Math.PI / 2 * k / inN);
+        if (p >= outAt) g *= Math.cos(Math.PI / 2 * Math.min(1, (p - outAt) / outN));
+        mix[p] += s.data[k] * g;
+      }
+    }
+    let peak = 0; for (const v of mix) peak = Math.max(peak, Math.abs(v));
+    if (peak > 0.89) for (let p = 0; p < mix.length; p++) mix[p] *= 0.89 / peak;
+    mix.lead = LEAD0;
+    return mix;
+  }
+
+  // ---- 再生 ----
+  function getCtx() {
+    if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; ctx = new AC({ sampleRate: FS }); }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function stop() {
+    abort = true;
+    if (src) { try { src.stop(); } catch {} src = null; }
+    cancelAnimationFrame(raf); if (el.head) el.head.hidden = true;
+    refreshButtons();
+  }
+  function playBuffer(mix, fromTick = 0) {
+    const c = getCtx();
+    const buf = c.createBuffer(1, mix.length, FS); buf.copyToChannel(mix, 0);
+    src = c.createBufferSource(); src.buffer = buf; src.connect(c.destination);
+    const msPerTick = 60000 / st.tempo / TPQ;
+    playStart = c.currentTime + 0.05 + mix.lead - fromTick * msPerTick / 1000;
+    src.onended = () => { if (src && src.buffer === buf) { src = null; cancelAnimationFrame(raf); el.head.hidden = true; refreshButtons(); } };
+    src.start(c.currentTime + 0.05);
+    const tick = () => {
+      const tk = (c.currentTime - playStart) * 1000 / msPerTick;
+      if (tk >= 0) { el.head.hidden = false; el.head.style.left = (tk * ppt) + 'px'; follow(tk * ppt); }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    refreshButtons();
+  }
+  function follow(x) {
+    const r = el.roll, keyW = 46, vis = r.clientWidth - keyW;
+    if (x < r.scrollLeft || x > r.scrollLeft + vis * 0.8) r.scrollLeft = Math.max(0, x - vis * 0.2);
+  }
+  async function sing(notes, fromTick = 0, label = '合成中') {
+    getCtx();                       // iPhoneはタップ中にAudioContextを起こす必要がある
+    stop(); abort = false;
+    await ensureVoice(); if (!bank || !wl) return;
+    busy = true; refreshButtons();
+    try {
+      const mix = await renderMix(notes, p => { el.prog.style.width = (p * 100).toFixed(1) + '%'; setStatus(`${label}… ${Math.round(p * 100)}%`); });
+      if (!mix || abort) return;
+      lastMix = mix;
+      const miss = notes.filter(n => !resolve(n.ly, '-', n.midi) && !resolve(n.ly, 'a', n.midi)).length;
+      setStatus(miss ? `再生中（歌えない歌詞が ${miss} 個あります。赤い縞の音符を確認してください）` : '再生中', !!miss);
+      playBuffer(mix, fromTick);
+    } catch (e) { console.error(e); setStatus('合成に失敗しました：' + e.message, true); }
+    finally { busy = false; el.prog.style.width = '0'; refreshButtons(); paint(); }
+  }
+
+  // ---- 描画 ----
+  function totalTicks() { const end = st.notes.reduce((m, n) => Math.max(m, n.t + n.len), 0); return Math.max(16 * 1920, Math.ceil(end / 1920 + 4) * 1920); }
+  function layout() {
+    const W = totalTicks() * ppt;
+    el.grid.style.width = W + 'px'; el.grid.style.height = (ROWS * 22) + 'px';
+    el.ticks.style.width = W + 'px';
+    const beat = TPQ * ppt, bar = beat * 4;
+    el.grid.style.background = `repeating-linear-gradient(to right, #a9a7a8 0 1px, transparent 1px ${bar}px),
+      repeating-linear-gradient(to right, #d6d4d5 0 1px, transparent 1px ${beat}px),
+      repeating-linear-gradient(to bottom, ${rowStops()})`;
+    let h = ''; for (let m = 0; m * 1920 < totalTicks(); m++) h += `<span style="left:${m * 1920 * ppt}px">${m + 1}</span>`;
+    el.ticks.innerHTML = h;
+  }
+  function rowStops() {
+    const out = []; for (let r = 0; r < 12; r++) { const m = TOP - r; const c = BLACK.has(m % 12) ? '#ecebec' : '#fbfbfb'; out.push(`${c} ${r * 22}px ${(r + 1) * 22 - 1}px, #e3e1e2 ${(r + 1) * 22 - 1}px ${(r + 1) * 22}px`); }
+    return out.join(',');
+  }
+  function paint() {
+    const ord = sorted(); let pv = '-', prevEnd = -1; const miss = new Set();
+    if (bank) for (const n of ord) { const a = resolve(n.ly, n.t === prevEnd ? pv : '-', n.midi); if (!a) miss.add(n.i); pv = a ? vowelOf(n.ly) : '-'; prevEnd = n.t + n.len; }
+    el.grid.querySelectorAll('.note').forEach(x => x.remove());
+    const frag = document.createDocumentFragment();
+    st.notes.forEach((n, i) => {
+      const d = document.createElement('div');
+      d.className = 'note' + (i === sel ? ' sel' : '') + (miss.has(i) ? ' miss' : '');
+      d.dataset.i = i; d.textContent = n.ly;
+      d.style.left = n.t * ppt + 'px'; d.style.top = (TOP - n.midi) * 22 + 'px'; d.style.width = Math.max(10, n.len * ppt) + 'px';
+      frag.appendChild(d);
+    });
+    el.grid.appendChild(frag);
+    panel();
+  }
+  function panel() {
+    const n = st.notes[sel];
+    if (!n) { el.panel.innerHTML = `<span class="empty">音符をタップすると、ここで歌詞・音程・長さを変えられます。</span>`; return; }
+    el.panel.innerHTML = `
+      <label class="grp"><span class="lbl">歌詞</span><input type="text" id="sgLyric" value="${n.ly}" maxlength="6" enterkeyhint="next" autocomplete="off"></label>
+      <span class="grp"><span class="lbl">音程</span><button class="sg-btn" data-act="down" aria-label="半音下げる">▼</button><span class="val">${midiName(n.midi)}</span><button class="sg-btn" data-act="up" aria-label="半音上げる">▲</button></span>
+      <span class="grp"><span class="lbl">長さ</span><button class="sg-btn" data-act="shorter" aria-label="短くする">−</button><span class="val">${lenName(n.len)}</span><button class="sg-btn" data-act="longer" aria-label="長くする">＋</button></span>
+      <span class="grp"><span class="lbl">位置</span><button class="sg-btn" data-act="left" aria-label="前へ">◀</button><button class="sg-btn" data-act="right" aria-label="後ろへ">▶</button></span>
+      <span class="grp"><button class="sg-btn" data-act="hear">♪ この音</button><button class="sg-btn" data-act="from">ここから歌う</button><button class="sg-btn" data-act="del">消す</button></span>`;
+    const inp = el.panel.querySelector('#sgLyric');
+    inp.addEventListener('input', () => { const v = toHira(inp.value.trim()); if (v) { st.notes[sel].ly = v; save(); paintNoteText(); } });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); selectNext(1, true); } });
+  }
+  function paintNoteText() { const d = el.grid.querySelector(`.note[data-i="${sel}"]`); if (d) d.textContent = st.notes[sel].ly; }
+  const lenName = l => ({ 120: '1/16', 240: '1/8', 360: '付点1/8', 480: '1/4', 720: '付点1/4', 960: '1/2', 1440: '付点1/2', 1920: '1' }[l] || (l / TPQ).toFixed(2) + '拍');
+  function selectNext(dir, focus) {
+    const ord = sorted(); const k = ord.findIndex(n => n.i === sel); const nx = ord[k + dir];
+    if (nx) { sel = nx.i; paint(); scrollToNote(st.notes[sel]); if (focus) el.panel.querySelector('#sgLyric')?.select(); }
+  }
+  function scrollToNote(n) {
+    const r = el.roll, x = n.t * ppt, y = (TOP - n.midi) * 22;
+    if (x < r.scrollLeft || x > r.scrollLeft + r.clientWidth - 120) r.scrollLeft = Math.max(0, x - 80);
+    if (y < r.scrollTop || y > r.scrollTop + r.clientHeight - 60) r.scrollTop = Math.max(0, y - r.clientHeight / 2);
+  }
+  function setStatus(t, err) { if (el.status) { el.status.textContent = t; el.status.classList.toggle('err', !!err); } }
+  function refreshButtons() {
+    if (!el.play) return;
+    el.play.disabled = busy || !!voiceErr;
+    el.play.textContent = busy ? '合成中…' : '▶ 歌う';
+    el.stop.disabled = !src && !busy;
+    el.wav.disabled = !lastMix;
+    el.modes.forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === mode));
+  }
+
+  // ---- 操作 ----
+  function onPanel(e) {
+    const b = e.target.closest('[data-act]'); if (!b) return; const n = st.notes[sel]; if (!n) return;
+    const a = b.dataset.act;
+    if (a === 'up') n.midi = Math.min(TOP, n.midi + 1);
+    else if (a === 'down') n.midi = Math.max(BOTTOM, n.midi - 1);
+    else if (a === 'longer') n.len += snap;
+    else if (a === 'shorter') n.len = Math.max(snap, n.len - snap);
+    else if (a === 'left') n.t = Math.max(0, n.t - snap);
+    else if (a === 'right') n.t += snap;
+    else if (a === 'del') { st.notes.splice(sel, 1); sel = -1; }
+    else if (a === 'hear') { sing([{ ...n, t: 0 }], 0, '準備中'); return; }
+    else if (a === 'from') { const ord = sorted().filter(x => x.t >= n.t); const t0 = n.t; sing(ord.map(x => ({ ...x, t: x.t - t0 })), 0); return; }
+    save(); layoutIfGrown(); paint();
+  }
+  let lastTotal = 0;
+  function layoutIfGrown() { const t = totalTicks(); if (t !== lastTotal) { lastTotal = t; layout(); } }
+
+  function gridPos(e) {
+    const r = el.grid.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    return { tick: Math.max(0, Math.floor(x / ppt / snap) * snap), midi: Math.max(BOTTOM, Math.min(TOP, TOP - Math.floor(y / 22))) };
+  }
+  let down = null, drag = null;
+  function bindGrid() {
+    el.grid.addEventListener('pointerdown', e => {
+      const nd = e.target.closest('.note');
+      if (nd) {
+        const i = +nd.dataset.i;
+        if (mode === 'erase') { st.notes.splice(i, 1); sel = -1; save(); paint(); return; }
+        sel = i; const n = st.notes[i];
+        const rect = nd.getBoundingClientRect();
+        drag = { i, x: e.clientX, y: e.clientY, t: n.t, midi: n.midi, len: n.len, resize: e.clientX > rect.right - 14, moved: false };
+        nd.setPointerCapture(e.pointerId); paint(); e.preventDefault(); return;
+      }
+      down = { x: e.clientX, y: e.clientY, time: performance.now() };
+    });
+    el.grid.addEventListener('pointermove', e => {
+      if (!drag) return;
+      const n = st.notes[drag.i]; const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+      drag.moved = true;
+      const dt = Math.round(dx / ppt / snap) * snap;
+      if (drag.resize) n.len = Math.max(snap, drag.len + dt);
+      else { n.t = Math.max(0, drag.t + dt); n.midi = Math.max(BOTTOM, Math.min(TOP, drag.midi - Math.round(dy / 22))); }
+      const d = el.grid.querySelector(`.note[data-i="${drag.i}"]`);
+      if (d) { d.style.left = n.t * ppt + 'px'; d.style.top = (TOP - n.midi) * 22 + 'px'; d.style.width = n.len * ppt + 'px'; }
+    });
+    const endDrag = () => { if (!drag) return; const moved = drag.moved; const n = st.notes[drag.i]; drag = null; if (moved) { save(); layoutIfGrown(); paint(); if (bank) previewQuiet(n); } };
+    el.grid.addEventListener('pointerup', e => {
+      if (drag) { endDrag(); return; }
+      if (!down) return;
+      const far = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8 || performance.now() - down.time > 600; down = null;
+      if (far) return;
+      if (mode !== 'write') { sel = -1; paint(); return; }
+      const { tick, midi } = gridPos(e);
+      const ord = sorted(); const before = ord.filter(n => n.t < tick).pop();
+      st.notes.push({ t: tick, len: snap >= 240 ? snap : 240, midi, ly: nextLyric(before) });
+      sel = st.notes.length - 1; save(); layoutIfGrown(); paint();
+      if (bank) previewQuiet(st.notes[sel]);
+    });
+    el.grid.addEventListener('pointercancel', () => { down = null; endDrag(); });
+  }
+  const nextLyric = () => 'ら';
+  // 置いた音の高さを短く鳴らす（合成済みの音なら即座に）
+  let pv = 0;
+  async function previewQuiet(n) {
+    const my = ++pv; if (busy || src) return;
+    const alias = resolve(n.ly, '-', n.midi); if (!alias || !wl) return;
+    const c = getCtx(); const pcm = await getPcm(alias); if (my !== pv || !pcm) return;
+    const entry = bank.manifest.phonemes[alias];
+    const a = wl.renderNote({ pcm, pitch: midiHz(n.midi), durationMs: 260, tempo: st.tempo, gender: st.gender, tension: st.tension, breathiness: st.breath, ...koe.leadInFromEntry(entry) });
+    if (!a || my !== pv) return;
+    const N = a.length, f = Math.min(480, N >> 2); for (let k = 0; k < f; k++) a[N - 1 - k] *= k / f;
+    const b = c.createBuffer(1, N, FS); b.copyToChannel(a, 0); const s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start();
+  }
+
+  // ---- 歌詞の流し込み ----
+  function pourLyrics() {
+    const mora = splitMora(el.bulk.value); if (!mora.length) return;
+    const ord = sorted(); let k = Math.max(0, ord.findIndex(n => n.i === sel)); if (sel < 0) k = 0;
+    let c = 0; for (; k < ord.length && c < mora.length; k++, c++) st.notes[ord[k].i].ly = mora[c];
+    save(); paint();
+    setStatus(`${c} 個の音符に歌詞を入れました` + (c < mora.length ? `（音符が足りず ${mora.length - c} 文字あまりました）` : ''));
+  }
+
+  // ---- UST ----
+  async function readUst(file) {
+    const buf = await file.arrayBuffer();
+    let text; try { text = new TextDecoder('shift_jis').decode(buf); } catch { text = new TextDecoder().decode(buf); }
+    if (/charset=UTF-8/i.test(text)) text = new TextDecoder().decode(buf);
+    let tempo = 120, section = null, cur = null, t = 0; const notes = [];
+    const flush = () => { if (!cur) return; const ly = lyricFromUst(cur.ly || ''); if (ly && !/^[rR]$/.test(ly)) notes.push({ t, len: cur.len, midi: Math.max(BOTTOM, Math.min(TOP, cur.midi)), ly }); t += cur.len; cur = null; };
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim(); const h = /^\[#(.+)\]$/.exec(line);
+      if (h) { flush(); section = h[1]; if (/^\d+$/.test(section)) cur = { len: 480, midi: 60, ly: '' }; continue; }
+      const eq = line.indexOf('='); if (eq < 0) continue;
+      const k = line.slice(0, eq).trim(), v = line.slice(eq + 1).trim();
+      if (section === 'SETTING' && k === 'Tempo') tempo = parseFloat(v) || tempo;
+      else if (cur) { if (k === 'Length') cur.len = parseInt(v, 10) || 0; else if (k === 'Lyric') cur.ly = v; else if (k === 'NoteNum') cur.midi = parseInt(v, 10) || 60; else if (k === 'Tempo' && !notes.length) tempo = parseFloat(v) || tempo; }
+    }
+    flush();
+    if (!notes.length) { setStatus('USTに音符が見つかりませんでした', true); return; }
+    stop(); st = { ...st, tempo: Math.round(tempo * 100) / 100, notes }; sel = -1; save();
+    el.tempo.value = st.tempo; lastTotal = 0; layoutIfGrown(); paint(); el.roll.scrollLeft = 0; scrollToNote(sorted()[0]);
+    setStatus(`${file.name} を読み込みました（${notes.length} 音符 / テンポ ${st.tempo}）`);
+  }
+  async function writeUst() {
+    const ord = sorted(); const lines = ['[#VERSION]', 'UST Version1.2', '[#SETTING]', `Tempo=${st.tempo}`, 'Tracks=1', 'ProjectName=砂上天獄', 'Mode2=True'];
+    let t = 0, idx = 0; const push = (len, ly, midi) => lines.push(`[#${String(idx++).padStart(4, '0')}]`, `Length=${len}`, `Lyric=${ly}`, `NoteNum=${midi}`, 'PreUtterance=', 'Intensity=100', 'Modulation=0');
+    for (const n of ord) { if (n.t > t) push(n.t - t, 'R', 60); const len = Math.max(1, n.len); push(len, n.ly, n.midi); t = n.t + len; }
+    lines.push('[#TRACKEND]', '');
+    let bytes;
+    try { if (!koe) koe = await import(KOE_BASE + 'index.js'); bytes = koe.encodeShiftJis(lines.join('\r\n')); }
+    catch { bytes = new TextEncoder().encode(lines.join('\r\n').replace('UST Version1.2', 'UST Version1.2\r\nCharset=UTF-8')); }
+    download(new Blob([bytes], { type: 'application/octet-stream' }), 'tototo.ust');
+  }
+  function writeWav() {
+    if (!lastMix) return; const n = lastMix.length; const b = new DataView(new ArrayBuffer(44 + n * 2));
+    const w = (o, s) => [...s].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
+    w(0, 'RIFF'); b.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+    b.setUint32(24, FS, true); b.setUint32(28, FS * 2, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); w(36, 'data'); b.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) b.setInt16(44 + i * 2, Math.max(-1, Math.min(1, lastMix[i])) * 32767, true);
+    download(new Blob([b], { type: 'audio/wav' }), 'tototo.wav');
+  }
+  function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+
+  // ---- ページ ----
+  function html() {
+    const lens = [[120, '1/16'], [240, '1/8'], [480, '1/4'], [960, '1/2'], [1920, '1']];
+    const keys = Array.from({ length: ROWS }, (_, r) => { const m = TOP - r, b = BLACK.has(m % 12), c = m % 12 === 0; return `<div class="${b ? 'b' : ''}${c ? ' c' : ''}" data-midi="${m}">${c || !b ? midiName(m) : ''}</div>`; }).join('');
+    return `
+  <h1 class="ttl">歌わせてみる</h1>
+  <div class="sg-intro">
+    <p>注寝とととに、好きなメロディを歌わせられます。</p>
+    <p>「書く」で空いているところをタップすると音符が置けます。音符はドラッグで移動、右端のドラッグで長さを変えられます。歌詞は下の欄で変えられます。</p>
+  </div>
+  <div class="sg-status" id="sgStatus" role="status">読み込み中…</div>
+  <div class="sg-prog"><i id="sgProg"></i></div>
+  <div class="sg-bar">
+    <button class="sg-btn main" id="sgPlay">▶ 歌う</button>
+    <button class="sg-btn" id="sgStop">■ 止める</button>
+    <label>テンポ <input type="number" id="sgTempo" min="40" max="300" step="1" inputmode="numeric"></label>
+    <span class="sg-seg" role="group" aria-label="モード"><button class="sg-btn" data-mode="write">書く</button><button class="sg-btn" data-mode="select">選ぶ</button><button class="sg-btn" data-mode="erase">消す</button></span>
+    <label>長さ <select id="sgSnap">${lens.map(([v, t]) => `<option value="${v}"${v === snap ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
+    <span class="sg-seg" role="group" aria-label="拡大縮小"><button class="sg-btn" id="sgZoomOut" aria-label="縮小">−</button><button class="sg-btn" id="sgZoomIn" aria-label="拡大">＋</button></span>
+  </div>
+  <div class="roll" id="sgRoll">
+    <div class="roll-inner">
+      <div class="ruler"><div class="corner"></div><div class="ticks" id="sgTicks"></div></div>
+      <div class="roll-body">
+        <div class="keys" id="sgKeys">${keys}</div>
+        <div class="grid" id="sgGrid"><div class="playhead" id="sgHead" hidden></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="sg-panel" id="sgPanel"></div>
+  <details class="sg-more">
+    <summary>歌詞の流し込み・声の調整・ファイル</summary>
+    <div class="in">
+      <div class="stack">
+        <label for="sgBulk" class="sg-note">ひらがなで歌詞を書いて「流し込む」を押すと、選んでいる音符（なければ最初の音符）から順に1文字ずつ入ります。「きゃ」などの小さい字はまとめて1音になります。</label>
+        <textarea id="sgBulk" placeholder="おちゃをいれよう ゆげがのぼるよ"></textarea>
+        <div class="sg-files"><button class="sg-btn" id="sgPour">流し込む</button></div>
+      </div>
+      <div class="sg-sliders">
+        <label for="sgGender">声の太さ</label><input type="range" id="sgGender" min="0" max="1" step="0.05"><output id="sgGenderV"></output>
+        <label for="sgTension">力み</label><input type="range" id="sgTension" min="0" max="1" step="0.05"><output id="sgTensionV"></output>
+        <label for="sgBreath">息っぽさ</label><input type="range" id="sgBreath" min="0" max="1" step="0.05"><output id="sgBreathV"></output>
+      </div>
+      <div class="sg-files">
+        <label class="sg-btn" for="sgUst" style="display:inline-flex;align-items:center">USTを読み込む</label><input type="file" id="sgUst" accept=".ust">
+        <button class="sg-btn" id="sgUstSave">USTで保存</button>
+        <button class="sg-btn" id="sgWav" disabled>WAVで保存</button>
+        <button class="sg-btn" id="sgReset">サンプル曲に戻す</button>
+        <button class="sg-btn" id="sgClear">全部消す</button>
+      </div>
+      <p class="sg-note">合成には <a class="u" href="https://github.com/onjmin/koe" target="_blank" rel="noopener">koe</a>（WORLDボコーダ / OpenUtau worldline）を使っています。作った曲はこのブラウザに自動で保存されます。歌わせたものを公開する場合は<a class="u" href="#terms">利用規約</a>に沿ってください。</p>
+    </div>
+  </details>
+  ${back('tototo')}`;
+  }
+
+  function mount() {
+    const $ = id => document.getElementById(id);
+    el = { status: $('sgStatus'), prog: $('sgProg'), play: $('sgPlay'), stop: $('sgStop'), tempo: $('sgTempo'), roll: $('sgRoll'), grid: $('sgGrid'),
+      ticks: $('sgTicks'), keys: $('sgKeys'), head: $('sgHead'), panel: $('sgPanel'), bulk: $('sgBulk'), wav: $('sgWav'), modes: [...document.querySelectorAll('[data-mode]')] };
+    el.tempo.value = st.tempo;
+    lastTotal = 0; layoutIfGrown(); paint(); refreshButtons();
+    // 最初の音符が見える位置へ
+    const first = sorted()[0]; el.roll.scrollTop = first ? Math.max(0, (TOP - first.midi) * 22 - el.roll.clientHeight / 2) : (TOP - 67) * 22;
+
+    el.play.addEventListener('click', () => sing(sorted(), 0));
+    el.stop.addEventListener('click', () => { stop(); setStatus('止めました'); });
+    el.tempo.addEventListener('change', () => { const v = Math.max(40, Math.min(300, +el.tempo.value || 120)); st.tempo = v; el.tempo.value = v; save(); });
+    el.modes.forEach(b => b.addEventListener('click', () => { mode = b.dataset.mode; refreshButtons(); }));
+    $('sgSnap').addEventListener('change', e => { snap = +e.target.value; });
+    $('sgZoomIn').addEventListener('click', () => zoom(1.4));
+    $('sgZoomOut').addEventListener('click', () => zoom(1 / 1.4));
+    el.panel.addEventListener('click', onPanel);
+    el.keys.addEventListener('click', e => { const k = e.target.closest('[data-midi]'); if (k && bank) previewQuiet({ ly: 'あ', midi: +k.dataset.midi }); });
+    $('sgPour').addEventListener('click', pourLyrics);
+    for (const [id, key] of [['sgGender', 'gender'], ['sgTension', 'tension'], ['sgBreath', 'breath']]) {
+      const r = $(id), o = $(id + 'V'); r.value = st[key]; o.textContent = (+st[key]).toFixed(2);
+      r.addEventListener('input', () => { st[key] = +r.value; o.textContent = (+r.value).toFixed(2); save(); });
+    }
+    $('sgUst').addEventListener('change', e => { const f = e.target.files[0]; if (f) readUst(f); e.target.value = ''; });
+    $('sgUstSave').addEventListener('click', writeUst);
+    el.wav.addEventListener('click', writeWav);
+    $('sgReset').addEventListener('click', () => { if (!confirm('サンプル曲に戻しますか？（今の曲は消えます）')) return; stop(); st = structuredClone(SAMPLE); sel = -1; save(); el.tempo.value = st.tempo; mount(); });
+    $('sgClear').addEventListener('click', () => { if (!confirm('音符を全部消しますか？')) return; stop(); st.notes = []; sel = -1; save(); paint(); });
+    bindGrid();
+    document.addEventListener('keydown', onKey);
+    if (voiceErr) setStatus(voiceErr, true); else if (bank) setStatus('準備できました。▶ 歌う を押してください。'); else ensureVoice();
+  }
+  function zoom(f) {
+    const r = el.roll, cx = (r.scrollLeft + r.clientWidth / 2) / ppt;
+    ppt = Math.max(0.04, Math.min(0.6, ppt * f)); lastTotal = 0; layoutIfGrown(); paint();
+    r.scrollLeft = cx * ppt - r.clientWidth / 2;
+  }
+  function onKey(e) {
+    if (!el.grid?.isConnected) return;
+    if (e.target.closest('input,textarea,select')) return;
+    if (e.key === ' ') { e.preventDefault(); src || busy ? stop() : sing(sorted(), 0); }
+    else if ((e.key === 'Delete' || e.key === 'Backspace') && sel >= 0) { st.notes.splice(sel, 1); sel = -1; save(); paint(); }
+    else if (e.key === 'ArrowRight' && sel >= 0) { e.preventDefault(); selectNext(1); }
+    else if (e.key === 'ArrowLeft' && sel >= 0) { e.preventDefault(); selectNext(-1); }
+  }
+  function unmount() { stop(); document.removeEventListener('keydown', onKey); }
+
+  return { html, mount, unmount };
+})();
 
 /* ======================================================
    ルーター・UI
@@ -501,9 +1094,11 @@ function closeNav(){nav.classList.remove('open');burger.setAttribute('aria-expan
 burger.addEventListener('click',openNav);
 document.getElementById('close').addEventListener('click',closeNav);
 
+let current = null;
 function render(){
   const key = location.hash.slice(1) || 'home';
   const p = PAGES[key] || PAGES.home;
+  current?.unmount?.(); current = p;
   main.innerHTML = p.full ? p.html() : `<div class="wrap page">${p.html()}</div>`;
   document.title = p === PAGES.home ? '砂上天獄' : `${p.title} | 砂上天獄`;
   document.querySelectorAll('.menu a').forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+key));
@@ -513,6 +1108,7 @@ function render(){
   loadX();
   closeNav();
   window.scrollTo(0,0);
+  p.mount?.();
 }
 window.addEventListener('hashchange',render);
 

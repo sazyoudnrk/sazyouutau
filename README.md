@@ -36,6 +36,16 @@ audio/
   toto_3.mp3        試聴3
 ```
 
+## 歌わせてみる（#sing）
+
+[@onjmin/koe](https://github.com/onjmin/koe)（WORLDボコーダ / OpenUtau worldline）でブラウザ上で注寝とととを歌わせるページ。
+
+- 声のデータ: `voice/tototo.koe`（注寝ととと 連続音 v1.11 を koe 形式に変換したもの。1017音素）
+  - 音源を更新したら、koe の [DEMO](https://onjmin.github.io/koe/demo) の「変換」で新しい zip から `.koe` を作り、同じ名前で置き換える
+- ライブラリ本体と worldline は jsDelivr の `@onjmin/koe@1.0.11` から読み込む
+- 作った曲は見た人のブラウザ（localStorage）に保存される。UST の読み込み・保存、WAV 保存あり
+- サンプル曲はきらきら星のメロディに書き下ろしの歌詞（`index.html` の `SAMPLE`）
+
 ## ページ
 
-`#home` `#utau` `#terms` `#tototo` `#ust` `#mycoe` `#toto` `#works` `#gallery`
+`#home` `#utau` `#terms` `#tototo` `#ust` `#sing` `#mycoe` `#toto` `#works` `#gallery`
