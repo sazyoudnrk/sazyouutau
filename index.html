@@ -123,12 +123,22 @@ hr{border:0;border-top:2px solid var(--rule);margin:0}
 @media (max-width:520px){.vcard{grid-template-columns:1fr 1fr;gap:18px 16px}.vcard .txt{gap:16px}.vcard .txt p{font-size:15px}}
 
 /* 試聴 */
-.listen{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,2fr);align-items:center;gap:16px}
-.listen>span{font-size:22px}
-.players{display:flex;flex-direction:column;gap:10px;min-width:0}
-.player{background:var(--white);display:flex;align-items:center;min-height:60px;padding:6px 10px;max-width:380px}
-.player audio{width:100%;height:44px}
-.na{font-size:14px}
+.listen{display:flex;flex-direction:column;gap:8px}
+.listen>span{font-size:clamp(24px,6vw,30px);color:var(--text)}
+.players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;min-width:0}
+/* UTAU・MYCOEの一覧では「試聴」を左、プレイヤーを右に（元サイトどおり） */
+.vcard .listen{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:center;gap:16px}
+.vcard .players{grid-template-columns:1fr}
+/* Wixの音声プレイヤー風：白い箱に黒い三角と残り時間 */
+.player{background:var(--white);display:flex;align-items:center;gap:22px;min-height:58px;padding:0 20px;color:#000;max-width:380px}
+.player audio{display:none}
+.pl-btn{flex:none;width:30px;height:30px;border:0;background:none;padding:0;cursor:pointer;color:#000;display:grid;place-items:center}
+.pl-btn svg{width:26px;height:28px;fill:currentColor}
+.pl-btn .pz{display:none}
+.player.playing .pl-btn .py{display:none}
+.player.playing .pl-btn .pz{display:block}
+.pl-time{font-family:Arial,"Helvetica Neue",sans-serif;font-size:17px;font-variant-numeric:tabular-nums;letter-spacing:0;font-weight:400}
+.player.na .pl-btn{cursor:default}
 
 /* ===== キャラ詳細 ===== */
 .char{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:28px;align-items:start}
@@ -140,9 +150,13 @@ hr{border:0;border-top:2px solid var(--rule);margin:0}
 .prof dt::after{content:"："}
 .prof dd{margin:0}
 .prof .gap{grid-column:1/-1;height:.8em}
-.dl{display:flex;flex-direction:column;gap:28px}
-.dl-item{display:flex;flex-direction:column;gap:10px}
-.dl-item .btn{max-width:360px}
+.dl{display:flex;flex-direction:column;gap:20px}
+/* Downloadは元サイトどおり：青緑の箱に金色の丸ボタン、薄黄色の文字 */
+.dl-item{display:flex;flex-direction:column;gap:12px;background:#4d7386;color:#f6e7a4;padding:16px 16px 26px}
+.dl-item .btn{align-self:flex-start;max-width:100%;min-height:60px;padding:6px 28px;border-radius:999px;background:#a5883f;color:#f6e7a4;
+  font-weight:300;font-size:clamp(19px,5vw,22px);letter-spacing:.06em}
+.dl-item .btn:hover{background:#8f7534}
+.dl-item .listen>span{color:#f6e7a4}
 .back{max-width:200px}
 
 /* ===== 規約 ===== */
@@ -296,7 +310,7 @@ const HERO = [
   {src:'img/top/top3.webp'},   // 夕焼けの海辺
 ];
 
-// 試聴音声：audio/ に置いたファイル（無ければ「試聴音声は準備中です」と出る）
+// 試聴音声：audio/ に置いたファイル（無ければプレイヤーの見た目だけ出て、時間は「--:--」）
 const AUDIO = {
   tototo_v111:'audio/tototo_v111.mp3',
   tototo_v110:'audio/tototo_v110.mp3',
@@ -357,7 +371,9 @@ const GALLERY = [
 const ext = (href, text, cls='u') => `<a class="${cls}" href="${href}" target="_blank" rel="noopener">${text}</a>`;
 const listen = (keys, label='試聴') => `
   <div class="listen"><span>${label}</span><div class="players">
-  ${[].concat(keys).map(k=>`<div class="player"><audio controls preload="metadata" src="${AUDIO[k]}" data-audio></audio></div>`).join('')}
+  ${[].concat(keys).map(k=>`<div class="player"><audio preload="metadata" src="${AUDIO[k]}" data-audio></audio>
+    <button class="pl-btn" type="button" aria-label="再生"><svg class="py" viewBox="0 0 26 28"><path d="M2 1.5 L24 14 L2 26.5Z"/></svg><svg class="pz" viewBox="0 0 26 28"><rect x="3" y="2" width="7" height="24"/><rect x="16" y="2" width="7" height="24"/></svg></button>
+    <span class="pl-time">--:--</span></div>`).join('')}
   </div></div>`;
 const prof = rows => `<dl class="prof">${rows.map(r=>r?`<dt>${r[0]}</dt><dd>${r[1]}</dd>`:'<div class="gap"></div>').join('')}</dl>`;
 const back = to => `<a class="btn back" href="#${to}">戻る</a>`;
@@ -1334,6 +1350,25 @@ function closeNav(){nav.classList.remove('open');burger.setAttribute('aria-expan
 burger.addEventListener('click',openNav);
 document.getElementById('close').addEventListener('click',closeNav);
 
+/* 試聴プレイヤー：残り時間を「-00:26」のように表示。音声が無いあいだは見た目だけ（「--:--」） */
+const fmt = sec => { sec = Math.max(0, Math.ceil(sec || 0)); return `-${String(Math.floor(sec / 60)).padStart(2,'0')}:${String(sec % 60).padStart(2,'0')}`; };
+function setupPlayers(){
+  main.querySelectorAll('.player').forEach(pl => {
+    const a = pl.querySelector('audio'), t = pl.querySelector('.pl-time'), b = pl.querySelector('.pl-btn');
+    const show = () => { if (isFinite(a.duration)) t.textContent = fmt(a.duration - a.currentTime); };
+    a.addEventListener('loadedmetadata', show);
+    a.addEventListener('timeupdate', show);
+    a.addEventListener('play', () => { pl.classList.add('playing'); b.setAttribute('aria-label','一時停止'); });
+    a.addEventListener('pause', () => { pl.classList.remove('playing'); b.setAttribute('aria-label','再生'); });
+    a.addEventListener('ended', () => { a.currentTime = 0; show(); });
+    a.addEventListener('error', () => { pl.classList.add('na'); pl.title = '試聴音声は準備中です'; b.setAttribute('aria-label','試聴音声は準備中です'); t.textContent = '--:--'; }, {once:true});
+    b.addEventListener('click', () => {
+      if (pl.classList.contains('na')) return;
+      if (a.paused) { main.querySelectorAll('.player audio').forEach(x => { if (x !== a) x.pause(); }); a.play().catch(()=>{}); } else a.pause();
+    });
+  });
+}
+
 let current = null;
 /* トップのスライド：矢印で前後、4.5秒ごとに自動送り（触っている間と、触ってから6秒は止める） */
 function slideBy(dir) {
@@ -1354,9 +1389,7 @@ function render(){
   main.innerHTML = p.full ? p.html() : `<div class="wrap page">${p.html()}</div>`;
   document.title = p === PAGES.home ? '砂上天獄' : `${p.title} | 砂上天獄`;
   document.querySelectorAll('.menu a').forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+key));
-  main.querySelectorAll('[data-audio]').forEach(a=>a.addEventListener('error',()=>{
-    const s=document.createElement('span');s.className='na';s.textContent='試聴音声は準備中です';a.replaceWith(s);
-  },{once:true}));
+  setupPlayers();
   loadX();
   closeNav();
   window.scrollTo(0,0);
